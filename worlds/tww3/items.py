@@ -2,38 +2,25 @@ from BaseClasses import ItemClassification as IC
 from typing import NamedTuple, Dict, Set, List
 from enum import IntEnum
 
-
-class ItemType(IntEnum):
-    technology = 1
-    building = 2
-    unit = 3
-    goal = 4
-
-class ItemData(NamedTuple):
-    classification: IC
-    count: int
-    name: str
-    type: ItemType
-
-from typing import NamedTuple, Dict, Set, List
-from enum import IntEnum
-from BaseClasses import ItemClassification as IC
-
 class ItemType(IntEnum):
     technology = 1
     building = 2
     unit = 3
     goal = 4
     filler = 5
+    progression = 6
+
 
 class ItemData(NamedTuple):
     classification: IC
     count: int
     name: str
     type: ItemType
+    #isProgressive: bool
 
 item_table: Dict[int, ItemData] = {
     1000: ItemData(IC.progression, 0, "Orb of Domination", ItemType.goal),
+    1100: ItemData(IC.progression, 0, "Sphere of Influence", ItemType.progression),
     2000: ItemData(IC.filler, 0, "Gold", ItemType.filler),
     40000: ItemData(IC.useful, 1, "wh2_dlc13_tech_emp_wulfhart_cav_1", ItemType.technology),
     40001: ItemData(IC.useful, 1, "wh2_dlc13_tech_emp_wulfhart_cav_1_b", ItemType.technology),

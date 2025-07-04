@@ -626,37 +626,3 @@ location_table: Dict[int, LocationDict] = {
     564: {'name': 'wh3_main_combi_region_great_turtle_isle'},
     565: {'name': 'wh3_main_combi_region_the_monoliths'}
 }
-
-# class Location_Manager():
-
-#     def __init__(self, settlement_table: Dict, amount_missions: int, random: random.Random, player_faction: str):
-#         self.settlement_table = settlement_table
-#         self.amount_missions = amount_missions
-#         self.random = random
-#         self.player_faction = player_faction 
-
-#     def create_location_dict(self):
-#         location_table: Dict[int, LocationDict] = {}
-#         settlement_list: List = [
-#                 [entry["settlement"], entry["faction"]]
-#                 for entry in self.settlement_table.values()
-#                 ]
-#         for i in range(self.amount_missions):
-#             is_ai: bool = False
-#             while(not is_ai):
-#                 index = self.random.randint(0, len(settlement_list)-1)
-#                 settlement_list[index][1] != self.player_faction
-#                 is_ai = True
-#             location_table[i] = {
-#                 "mission_type": "CAPTURE_REGIONS",
-#                 "target": settlement_list[index][0],
-#                 "name": "CAPTURE_REGIONS " + settlement_list[index][0]
-#             }
-#             settlement_list.pop(index)
-#         return location_table
-
-# sm: Settlement_Manager = Settlement_Manager(random)
-# table = sm.shuffle_settlements("wh_main_emp_empire")
-# lm: Location_Manager = Location_Manager(table, 3, random, "wh_main_emp_empire")
-# location_table = lm.create_location_dict()
-# print(location_table)
