@@ -4,7 +4,7 @@ from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 from .options import TWW3Options  # the options we defined earlier
 from .items import item_table  # data used below to add items to the World
 from .locations import location_table  # same as above
-from .settlements import Settlement_Manager
+from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
 from worlds.generic.Rules import set_rule
 
@@ -31,7 +31,7 @@ class TWW3World(World):
     item_name_to_id = {data.name: item_id for item_id, data in items.item_table.items()}
     location_name_to_id = all_locations
     sm: Settlement_Manager = None
-    locations_to_spheres = {}
+    factions_to_spheres = {}
     item_list = []
 
     def get_filler_item_name(self) -> str:
@@ -39,7 +39,7 @@ class TWW3World(World):
 
     def generate_early(self):
         #self.player_faction = self.options.starting_faction.value
-        self.player_faction = "wh_main_emp_empire"
+        self.player_faction = lord_name_to_faction_dict[self.options.starting_faction]
         self.sm: Settlement_Manager = Settlement_Manager(self.random)
         self.settlement_table: Dict = self.sm.shuffle_settlements(self.player_faction) 
 
@@ -52,6 +52,7 @@ class TWW3World(World):
 
         sphere_amount = self.options.spheres_option.value
         sphere_distance = self.options.sphere_distance.value
+        self.factions_to_spheres = self.sm.factions_to_spheres(sphere_amount, sphere_distance)
         for location_name in location_names:
             loc_id = self.location_name_to_id[location_name]
             location = TWW3Location(self.player, location_name, loc_id, world_region)
@@ -61,10 +62,8 @@ class TWW3World(World):
                 required_spheres = int(distance/sphere_distance)
                 if ((required_spheres != 0) and (required_spheres < sphere_amount)):
                     set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres))
-                    self.locations_to_spheres[location.name] = required_spheres
                 elif ((required_spheres >= sphere_amount) and (self.options.sphere_world.value)):
                     set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres - 1))
-                    self.locations_to_spheres[location.name] = required_spheres
                 elif ((required_spheres >= sphere_amount) and (not self.options.sphere_world.value)):
                     continue
             world_region.locations.append(location)
@@ -130,10 +129,13 @@ class TWW3World(World):
 
         # Add entrances to `slot_data`. This is the same data that is written to the .aptww file.
         
-        slot_data["options"] = self.options
+        slot_data["PlayerFaction"] = self.options.starting_faction.value
+        slot_data["ProgressiveBuildings"] = self.options.progressive_buildings.value
+        slot_data["ProgressiveUnits"] = self.options.progressive_units.value
+        slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["Settlements"] = self.settlement_table
-        slot_data["Spheres"] = self.locations_to_spheres
-        slot_data["items"] = self.item_list
+        slot_data["Spheres"] = self.factions_to_spheres
+        slot_data["Items"] = self.item_list
         
 
         return slot_data

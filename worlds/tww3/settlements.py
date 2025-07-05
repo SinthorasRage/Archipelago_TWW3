@@ -3,7 +3,7 @@ from typing import TypedDict, NamedTuple
 import math
 
 lord_name_to_faction_dict = {
-    "1": "wh_main_emp_empire"
+    1: "wh_main_emp_empire"
 }
 
 # faction table with columns faction_key, is_playable, has_home
@@ -939,6 +939,16 @@ class Settlement_Manager():
     
     def get_distance(self, faction_key: str) -> int:
         return self.faction_distance_dict[faction_key]
+    
+    def factions_to_spheres(self, sphere_amount: int, sphere_distance: int):
+        factions_to_spheres = {}
+        for key, value in self.faction_distance_dict.items():
+            sphere = int(value/sphere_distance)
+            if (sphere <sphere_amount):
+                factions_to_spheres[key] = sphere
+            else:
+                factions_to_spheres[key] = sphere_amount -1
+        return factions_to_spheres
 
     def table_to_dict(self, table) -> TypedDict:
         settlement_table: Dict[int, SettlementDict] = {}
