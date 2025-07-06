@@ -1,4 +1,4 @@
-from CommonClient import CommonContext, ClientCommandProcessor, server_loop, get_base_parser, logger
+from CommonClient import CommonContext, ClientCommandProcessor, server_loop, get_base_parser, gui_enabled, logger
 import Utils
 import asyncio
 import colorama
@@ -8,11 +8,37 @@ from worlds.tww3.settlements import lord_name_to_faction_dict
 from worlds.tww3.items import item_table, ItemType
 from worlds.tww3.locations import location_table
 import io
+import os
 
-path = "I:\SteamLibrary\steamapps\common\Total War WARHAMMER III"
+path = "."
 
 class TWW3CommandProcessor(ClientCommandProcessor):
     pass
+
+class WaaaghMessenger:
+    def __init__(self, path):
+        self.file = open(path, 'w+')
+
+    def run(self, message):
+        self.file.write(message + '\n')
+
+    def flush(self):    
+        self.file.flush()
+
+class WaaaghWatcher:
+    def __init__(self, path, context):
+        self.file = open(path, 'w+')
+        self.context = context
+
+    async def watch(self):
+        print('Watching for Waaagh...')
+        self.file.seek(0, 2)
+        while True:
+            line = self.file.readline()
+            if not line:
+                await asyncio.sleep(0.5)
+                continue
+            await self.context.check(line.strip())
 
 class TWW3Context(CommonContext):
     command_processor = TWW3CommandProcessor
@@ -21,31 +47,32 @@ class TWW3Context(CommonContext):
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
         self.initialized = False
-        self.waaaghMessenger = WaaaghMessenger(path + r'\engine.in')
-        # self.run_gui()
+        self.path = None
 
         self.game = 'Total War Warhammer 3'
 
-    # def make_gui(self) -> "type[kvui.GameManager]":
-    #     """
-    #     To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
+    def make_gui(self) -> "type[kvui.GameManager]":
+        """
+        To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
 
-    #     Common changes are changing `base_title` to update the window title of the client and
-    #     updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
+        Common changes are changing `base_title` to update the window title of the client and
+        updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
 
-    #     ex. `logging_pairs.append(("Foo", "Bar"))`
-    #     will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
-    #     """
-    #     from kvui import GameManager
+        ex. `logging_pairs.append(("Foo", "Bar"))`
+        will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
+        """
+        from kvui import GameManager
 
-    #     class TextManager(GameManager):
-    #         base_title = "TWW3 Client"
+        class TextManager(GameManager):
+            base_title = "TWW3 Client"
 
-    #     return TextManager
+        return TextManager
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
             await super(TWW3Context, self).server_auth(password_requested)
+        await self.get_username()
+        await self.get_path()
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict):
@@ -54,7 +81,10 @@ class TWW3Context(CommonContext):
         elif cmd == "ReceivedItems":
             self.on_received_items(args)
 
-    def on_connected(self, args: dict):
+    def on_connected(self, args: dict): 
+        self.waaaghWatcher = WaaaghWatcher(self.path + '\\engine.out', self)
+        waaaghWatcher_task = asyncio.create_task(self.waaaghWatcher.watch(), name='WaaaghWatcher')
+        self.waaaghMessenger = WaaaghMessenger(self.path + '\\engine.in')
         self.settlements = args['slot_data']['Settlements']
         self.locationLookup = dict()
         for key, entry in location_table.items():
@@ -116,6 +146,30 @@ class TWW3Context(CommonContext):
     async def check(self, location):
         await self.check_locations([self.locationLookup[location]])
 
+    async def get_path(self):
+        if not self.path:
+            logger.info('Enter path:')
+            self.path = await self.console_input()
+            logger.info('Accepted Path is: ' + self.path)
+            if not path or not os.path.exists(self.path):
+                logger.error('Path does not point to a directory')
+            if not os.path.isfile(self.path + '\Warhammer3.exe'):
+                logger.error('No TWW3 exe in Path')
+            else:
+                logger.info('Found TWW3 exe')
+
+    def run_gui(self):
+        from kvui import GameManager
+
+        class TWW3Manager(GameManager):
+            logging_pairs = [
+                ("Client", "Archipelago")
+            ]
+            base_title = "Archipelago " + self.game + " Client"
+
+        self.ui = TWW3Manager(self)
+        self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
+
 class EngineInitializer():
     @classmethod
     def initialize(cls, settlements, randitem_list, playerFaction, spheres, waaaghMessenger):
@@ -145,49 +199,23 @@ class EngineInitializer():
                 waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (factionZero, faction))
         waaaghMessenger.flush()
 
-class WaaaghMessenger:
-    def __init__(self, path):
-        self.file = open(path, 'w+')
-
-    def run(self, message):
-        self.file.write(message + '\n')
-
-    def flush(self):    
-        self.file.flush()
-
-class WaaaghWatcher:
-    def __init__(self, path, context):
-        self.file = open(path, 'w+')
-        self.context = context
-
-    async def watch(self):
-        print('Watching for Waaagh...')
-        self.file.seek(0, 2)
-        while True:
-            line = self.file.readline()
-            if not line:
-                await asyncio.sleep(0.5)
-                continue
-            await self.context.check(line.strip())
-
 if __name__ == '__main__':
     Utils.init_logging('TWW3Client')
     logging.getLogger().setLevel(logging.INFO)
 
     async def main(args):
         ctx = TWW3Context(args.connect, args.password)
-        ctx.auth = args.name
         ctx.server_task = asyncio.create_task(server_loop(ctx), name='ServerLoop')
 
-        waaaghWatcher = WaaaghWatcher(path + r'\engine.out', ctx)
-        waaaghWatcher_task = asyncio.create_task(waaaghWatcher.watch(), name='WaaaghWatcher')
-        
+        if gui_enabled:
+            ctx.run_gui()
+        ctx.run_cli()
+
         await ctx.exit_event.wait()
         ctx.server_address = None
         await ctx.shutdown()
 
     parser = get_base_parser()
-    parser.add_argument('--name', default=None, help='Slot Name to connect as.')
     args = parser.parse_args()
     colorama.just_fix_windows_console()
 
