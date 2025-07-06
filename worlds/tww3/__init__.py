@@ -2,7 +2,7 @@ from typing import List, Dict, Any, cast, Mapping
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 from .options import TWW3Options  # the options we defined earlier
-from .items import item_table  # data used below to add items to the World
+from .items import item_table, ItemType  # data used below to add items to the World
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
@@ -29,6 +29,10 @@ class TWW3World(World):
     origin_region_name = "Old World"
     topology_present = False # show path to required location checks in spoiler
     item_name_to_id = {data.name: item_id for item_id, data in items.item_table.items()}
+    # print("Sinthoras Debug:")
+    # print(len(item_name_to_id))
+    # print(len(items.item_table.values()))
+    # print(len(set(items.item_table.values())))
     location_name_to_id = all_locations
     sm: Settlement_Manager = None
     factions_to_spheres = {}
@@ -60,12 +64,13 @@ class TWW3World(World):
                 faction: str = self.sm.settlement_to_faction(location.name)
                 distance: int = self.sm.get_distance(faction)
                 required_spheres = int(distance/sphere_distance)
-                if ((required_spheres != 0) and (required_spheres < sphere_amount)):
-                    set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres))
-                elif ((required_spheres >= sphere_amount) and (self.options.sphere_world.value)):
-                    set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres - 1))
-                elif ((required_spheres >= sphere_amount) and (not self.options.sphere_world.value)):
-                    continue
+                if (not (faction == lord_name_to_faction_dict[self.options.starting_faction])):
+                    if ((required_spheres != 0) and (required_spheres < sphere_amount)):
+                        set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres))
+                    elif ((required_spheres >= sphere_amount) and (self.options.sphere_world.value)):
+                        set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres - 1))
+                    elif ((required_spheres >= sphere_amount) and (not self.options.sphere_world.value)):
+                        continue
             world_region.locations.append(location)
 
         # Create events
@@ -93,10 +98,18 @@ class TWW3World(World):
         pool: List[TWW3Item] = []
 
         for item_id, item in item_table.items():
-            for i in range(item.count):
-                tww3_item = self.create_item(item.name)
-                pool.append(tww3_item)
-                self.item_list.append(item_id)
+            if (item.faction == self.player_faction):
+                if (item.tier != None):
+                    if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit)):
+                        for i in range(item.count):
+                            tww3_item = self.create_item(item.name)
+                            pool.append(tww3_item)
+                            self.item_list.append(item_id)
+                    elif ((item.tier -1 > self.options.starting_tier.value) and (item.type == ItemType.building)):
+                        for i in range(item.count):
+                            tww3_item = self.create_item(item.name)
+                            pool.append(tww3_item)
+                            self.item_list.append(item_id)
 
         for _ in range(self.options.domination_option.value):
             tww3_item = self.create_item("Orb of Domination")

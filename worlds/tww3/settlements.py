@@ -3,7 +3,105 @@ from typing import TypedDict, NamedTuple
 import math
 
 lord_name_to_faction_dict = {
-    1: "wh_main_emp_empire"
+    1: "wh_dlc03_bst_beastmen",
+    2: "wh_dlc05_bst_morghur_herd",
+    3: "wh_dlc05_wef_argwylon",
+    4: "wh_dlc05_wef_wood_elves",
+    5: "wh_dlc08_nor_norsca",
+    6: "wh_dlc08_nor_wintertooth",
+    7: "wh_main_brt_bordeleaux",
+    8: "wh_main_brt_bretonnia",
+    9: "wh_main_brt_carcassonne",
+    10: "wh_main_chs_chaos",
+    11: "wh_main_dwf_dwarfs",
+    12: "wh_main_dwf_karak_izor",
+    13: "wh_main_dwf_karak_kadrin",
+    14: "wh_main_emp_empire",
+    15: "wh_main_emp_wissenland",
+    16: "wh_main_grn_crooked_moon",
+    17: "wh_main_grn_greenskins",
+    18: "wh_main_grn_orcs_of_the_bloody_hand",
+    19: "wh_main_vmp_schwartzhafen",
+    20: "wh_main_vmp_vampire_counts",
+    21: "wh2_dlc09_skv_clan_rictus",
+    22: "wh2_dlc09_tmb_exiles_of_nehek",
+    23: "wh2_dlc09_tmb_followers_of_nagash",
+    24: "wh2_dlc09_tmb_khemri",
+    25: "wh2_dlc09_tmb_lybaras",
+    26: "wh2_dlc11_cst_noctilus",
+    27: "wh2_dlc11_cst_pirates_of_sartosa",
+    28: "wh2_dlc11_cst_the_drowned",
+    29: "wh2_dlc11_cst_vampire_coast",
+    30: "wh2_dlc11_def_the_blessed_dread",
+    31: "wh2_dlc11_vmp_the_barrow_legion",
+    32: "wh2_dlc12_lzd_cult_of_sotek",
+    33: "wh2_dlc13_emp_golden_order",
+    34: "wh2_dlc13_emp_the_huntmarshals_expedition",
+    35: "wh2_dlc13_lzd_spirits_of_the_jungle",
+    36: "wh2_dlc14_brt_chevaliers_de_lyonesse",
+    37: "wh2_dlc15_grn_bonerattlaz",
+    38: "wh2_dlc15_grn_broken_axe",
+    39: "wh2_dlc15_hef_imrik",
+    40: "wh2_dlc16_wef_drycha",
+    41: "wh2_dlc16_wef_sisters_of_twilight",
+    42: "wh2_dlc17_bst_malagor",
+    43: "wh2_dlc17_bst_taurox",
+    44: "wh2_dlc17_dwf_thorek_ironbrow",
+    45: "wh2_dlc17_lzd_oxyotl",
+    46: "wh2_main_def_cult_of_pleasure",
+    47: "wh2_main_def_hag_graef",
+    48: "wh2_main_def_har_ganeth",
+    49: "wh2_main_def_naggarond",
+    50: "wh2_main_hef_avelorn",
+    51: "wh2_main_hef_eataine",
+    52: "wh2_main_hef_nagarythe",
+    53: "wh2_main_hef_order_of_loremasters",
+    54: "wh2_main_hef_yvresse",
+    55: "wh2_main_lzd_hexoatl",
+    56: "wh2_main_lzd_itza",
+    57: "wh2_main_lzd_last_defenders",
+    58: "wh2_main_lzd_tlaqua",
+    59: "wh2_main_skv_clan_eshin",
+    60: "wh2_main_skv_clan_mors",
+    61: "wh2_main_skv_clan_moulder",
+    62: "wh2_main_skv_clan_pestilens",
+    63: "wh2_main_skv_clan_skryre",
+    64: "wh2_twa03_def_rakarth",
+    65: "wh3_dlc20_chs_azazel",
+    66: "wh3_dlc20_chs_festus",
+    67: "wh3_dlc20_chs_kholek",
+    68: "wh3_dlc20_chs_sigvald",
+    69: "wh3_dlc20_chs_valkia",
+    70: "wh3_dlc20_chs_vilitch",
+    71: "wh3_dlc23_chd_astragoth",
+    72: "wh3_dlc23_chd_legion_of_azgorh",
+    73: "wh3_dlc23_chd_zhatan",
+    74: "wh3_dlc24_cth_the_celestial_court",
+    75: "wh3_dlc24_ksl_daughters_of_the_forest",
+    76: "wh3_dlc24_tze_the_deceivers",
+    77: "wh3_dlc25_dwf_malakai",
+    78: "wh3_dlc25_nur_epidemius",
+    79: "wh3_dlc25_nur_tamurkhan",
+    80: "wh3_dlc26_grn_gorbad_ironclaw",
+    81: "wh3_dlc26_kho_arbaal",
+    82: "wh3_dlc26_kho_skulltaker",
+    83: "wh3_dlc26_ogr_golgfag",
+    84: "wh3_main_chs_shadow_legion",
+    85: "wh3_main_cth_the_northern_provinces",
+    86: "wh3_main_cth_the_western_provinces",
+    87: "wh3_main_dae_daemon_prince",
+    88: "wh3_main_dwf_the_ancestral_throng",
+    89: "wh3_main_emp_cult_of_sigmar",
+    90: "wh3_main_kho_exiles_of_khorne",
+    91: "wh3_main_ksl_the_great_orthodoxy",
+    92: "wh3_main_ksl_the_ice_court",
+    93: "wh3_main_ksl_ursun_revivalists",
+    94: "wh3_main_nur_poxmakers_of_nurgle",
+    95: "wh3_main_ogr_disciples_of_the_maw",
+    96: "wh3_main_ogr_goldtooth",
+    97: "wh3_main_sla_seducers_of_slaanesh",
+    98: "wh3_main_tze_oracles_of_tzeentch",
+    99: "wh3_main_vmp_caravan_of_blue_roses"
 }
 
 # faction table with columns faction_key, is_playable, has_home
@@ -959,7 +1057,7 @@ class Settlement_Manager():
             }
         return settlement_table
 
-    def shuffle_settlements(self, player_faction: str):
+    def shuffle_settlements_old(self, player_faction: str):
         remaining_settlements = len(settlement_table)
         remaining_settlements_ids = [i for i in range(len(settlement_table))]
         new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
@@ -1008,12 +1106,94 @@ class Settlement_Manager():
                 new_settlement_table[i][1] = self.faction_id_to_faction(new_settlement_table[i][1])
         self.new_settlement_dict = {row[0]: row[1] for row in new_settlement_table}
         return self.new_settlement_dict
+    
+    def get_closest_available_settlement(self, target_settlement_id: int, remaining_settlements_ids, new_settlement_table):
+        if not remaining_settlements_ids:
+            return None
+        sorted_settlements = sorted(
+            remaining_settlements_ids,
+            key=lambda sid: self.calculateDistance(
+                target_settlement_id, sid
+            )
+        )
+        return sorted_settlements[0] if sorted_settlements else None
 
+    def shuffle_settlements(self, player_faction: str):
+        remaining_settlements = len(settlement_table)
+        remaining_settlements_ids = [i for i in range(len(settlement_table))]
+        new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
+        i = random.randint(0, len(new_settlement_table) - 1)
+        new_settlement_table[i][1] = player_faction
+        player_settlement = new_settlement_table[i][0]
+        self.faction_distance_dict[player_faction] = 0
+        remaining_settlements_ids.pop(i)
+        remaining_settlements -= 1
+        first_loop = True
+        major_factions_keys = self.get_shuffled_major_faction_ids()
+        minor_factions_keys = self.get_shuffled_minor_faction_ids()
+        for i in range(len(major_factions_keys)):
+                if (remaining_settlements > 0):
+                    a = random.randint(0, len(remaining_settlements_ids) - 1)
+                    new_settlement_table[remaining_settlements_ids[a]][1] = major_factions_keys[i]
+                    if first_loop == True:
+                        faction_settlement = new_settlement_table[remaining_settlements_ids[a]][0]
+                        self.faction_distance_dict[self.faction_id_to_faction(major_factions_keys[i])] = (
+                            self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
+                        )
+                    remaining_settlements_ids.pop(a)
+                    remaining_settlements -= 1
+                else:
+                    break
+        for i in range(len(minor_factions_keys)):
+            if (remaining_settlements > 0):
+                a = random.randint(0, len(remaining_settlements_ids) - 1)
+                new_settlement_table[remaining_settlements_ids[a]][1] = minor_factions_keys[i]
+                if first_loop == True:
+                    faction_settlement = new_settlement_table[remaining_settlements_ids[a]][0]
+                    self.faction_distance_dict[self.faction_id_to_faction(minor_factions_keys[i])] = (
+                        self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
+                    )
+                remaining_settlements_ids.pop(a)
+                remaining_settlements -= 1
+            else:
+                break
+        while (remaining_settlements > 0):
+            # Randomize faction order
+            #major_factions_keys = random.shuffle(major_factions_keys)
+            for faction in major_factions_keys:
+                if (remaining_settlements == 0):
+                    break
+                faction_settlement_list = []
+                for i in range(len(new_settlement_table)):
+                    if new_settlement_table[i][1] == faction:
+                        faction_settlement_list.append(self.settlement_to_id(new_settlement_table[i][0]))
+                r = random.randint(0, len(faction_settlement_list) - 1)
+                closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table)
+                new_settlement_table[closest_Settlement][1] = faction
+                remaining_settlements_ids.remove(closest_Settlement)
+                remaining_settlements -= 1
+            for faction in minor_factions_keys:
+                if (remaining_settlements == 0):
+                    break
+                faction_settlement_list = []
+                for i in range(len(new_settlement_table)):
+                    if new_settlement_table[i][1] == faction:
+                        faction_settlement_list.append(self.settlement_to_id(new_settlement_table[i][0]))
+                r = random.randint(0, len(faction_settlement_list) - 1)
+                closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table)
+                new_settlement_table[closest_Settlement][1] = faction
+                remaining_settlements_ids.remove(closest_Settlement)
+                remaining_settlements -= 1
 
+        for i in range(len(new_settlement_table)):
+            if isinstance(new_settlement_table[i][1], int):
+                new_settlement_table[i][1] = self.faction_id_to_faction(new_settlement_table[i][1])
+        self.new_settlement_dict = {row[0]: row[1] for row in new_settlement_table}
+        return self.new_settlement_dict
 
 # sm = Settlement_Manager(random)
 # table = sm.shuffle_settlements("wh_main_emp_empire")
-# # print(table)
+# print(table)
 # print(sm.settlement_to_faction('wh3_main_combi_region_the_monolith_of_katam'))
 # print(table['wh3_main_combi_region_the_monolith_of_katam'])
 # print(sm.new_settlement_dict)

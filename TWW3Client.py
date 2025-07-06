@@ -21,8 +21,27 @@ class TWW3Context(CommonContext):
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
         self.initialized = False
-        self.waaaghMessenger = WaaaghMessenger(path + '\engine.in')
+        self.waaaghMessenger = WaaaghMessenger(path + r'\engine.in')
+        # self.run_gui()
+
         self.game = 'Total War Warhammer 3'
+
+    # def make_gui(self) -> "type[kvui.GameManager]":
+    #     """
+    #     To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
+
+    #     Common changes are changing `base_title` to update the window title of the client and
+    #     updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
+
+    #     ex. `logging_pairs.append(("Foo", "Bar"))`
+    #     will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
+    #     """
+    #     from kvui import GameManager
+
+    #     class TextManager(GameManager):
+    #         base_title = "TWW3 Client"
+
+    #     return TextManager
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -41,6 +60,7 @@ class TWW3Context(CommonContext):
         for key, entry in location_table.items():
             self.locationLookup[entry['name']] = int(key)
         self.playerFaction = lord_name_to_faction_dict[args['slot_data']['PlayerFaction']]
+        print("The Player Faction is: " + self.playerFaction)
         self.randitemList = args['slot_data']['Items']
         self.goalNumber = args['slot_data']['DominationGoal']
         self.spheres = args['slot_data']['Spheres']
@@ -53,7 +73,7 @@ class TWW3Context(CommonContext):
             item = item_table[entry.item]
             if item.type == ItemType.building:
                 self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
-            elif item.type == ItemType.technology:
+            elif item.type == ItemType.tech:
                 self.waaaghMessenger.run("cm:unlock_technology(\"%s\", \"%s\")" % (self.playerFaction, item.name))
             elif item.type == ItemType.unit:
                 self.waaaghMessenger.run("cm:remove_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
@@ -62,14 +82,18 @@ class TWW3Context(CommonContext):
             elif item.type == ItemType.progression:
                 numberOfSphereItems = numberOfSphereItems + 1
                 self.triggerProgressionEvents(numberOfSphereItems)
+            elif item.type == ItemType.filler:
+                if item.name == "Gold":
+                    self.waaaghMessenger.run("cm:treasury_mod(\"%s\", 10000)" % (self.playerFaction))
+
         if numberOfGoalItems == self.goalNumber:
             asyncio.create_task(self.send_msgs([{"cmd": "StatusUpdate", "status": 30}]))
         self.waaaghMessenger.flush()
 
     def triggerProgressionEvents(self, numberOfSphereItems):
-        oldSphere = ()
-        newSphere = ()
-        allOthers = ()
+        oldSphere = []
+        newSphere = []
+        allOthers = []
         for faction, sphere in self.spheres.items():
             if sphere < numberOfSphereItems:
                 oldSphere.append(faction)
@@ -79,11 +103,11 @@ class TWW3Context(CommonContext):
                 allOthers.append(faction)
         for oldFaction in oldSphere:
             for newFaction in newSphere:
-                self.waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", all, true, true, true)" % (oldFaction, newFaction))
+                self.waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", true, true, true)" % (oldFaction, newFaction))
         for newFaction in newSphere:
             for otherFaction in allOthers:
                 self.waaaghMessenger.run("cm:force_make_peace(\"%s\", \"%s\")" % (newFaction, otherFaction))
-                self.waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", all, false, false, true)" % (newFaction, otherFaction))
+                self.waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (newFaction, otherFaction))
         return
 
     def on_print_json(self, args: dict):
@@ -101,7 +125,7 @@ class EngineInitializer():
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for itemNumber in randitem_list:
             itemData = item_table[itemNumber]
-            if itemData.type == ItemType.technology:
+            if itemData.type == ItemType.tech:
                 waaaghMessenger.run("cm:lock_one_technology_node(\"%s\", \"%s\")" % (playerFaction, itemData.name))
             elif itemData.type == ItemType.building:
                 waaaghMessenger.run("cm:add_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (itemData.name, playerFaction))
@@ -155,7 +179,7 @@ if __name__ == '__main__':
         ctx.auth = args.name
         ctx.server_task = asyncio.create_task(server_loop(ctx), name='ServerLoop')
 
-        waaaghWatcher = WaaaghWatcher(path + '\engine.out', ctx)
+        waaaghWatcher = WaaaghWatcher(path + r'\engine.out', ctx)
         waaaghWatcher_task = asyncio.create_task(waaaghWatcher.watch(), name='WaaaghWatcher')
         
         await ctx.exit_event.wait()
