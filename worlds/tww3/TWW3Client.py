@@ -13,8 +13,12 @@ import os
 
 path = "."
 
-class TWW3CommandProcessor(ClientCommandProcessor):
-    pass
+class TWW3CommandProcessor(ClientCommandProcessor):    
+    def _cmd_spheres(self):
+        if isinstance(self.ctx, TWW3Context):
+            sorted_spheres = dict(sorted(self.ctx.spheres.items(), key=lambda item: item[1], reverse=True))
+            for faction, reqSphere in sorted_spheres.items():
+                logger.info("Faction: " + faction + " " + str(reqSphere) + " spheres")
 
 class WaaaghMessenger:
     def __init__(self, path):
