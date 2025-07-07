@@ -121,16 +121,16 @@ class TWW3World(World):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                    elif ((item.tier -1 > self.options.starting_tier.value) and (item.type == ItemType.building) and (self.options.building_shuffle.value == True)):
+                    elif ((item.tier +1 > self.options.starting_tier.value) and (item.type == ItemType.building) and (self.options.building_shuffle.value == True)):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                    elif (self.options.tech_shuffle == True):
-                        for i in range(item.count):
-                            tww3_item = self.create_item(item.name)
-                            pool.append(tww3_item)
-                            self.item_list.append(item_id)
+                elif ((self.options.tech_shuffle.value == True) and (item.type == ItemType.tech)):
+                    for i in range(item.count):
+                        tww3_item = self.create_item(item.name)
+                        pool.append(tww3_item)
+                        self.item_list.append(item_id)
 
         for _ in range(self.options.domination_option.value):
             tww3_item = self.create_item("Orb of Domination")
