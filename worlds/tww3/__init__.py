@@ -7,7 +7,23 @@ from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
 from worlds.generic.Rules import set_rule
+from worlds.LauncherComponents import components, Component, launch_subprocess, Type, icon_paths
+from Utils import local_path
 
+def launch_client():
+    from .TWW3Client import launch
+    launch_subprocess(launch, name="TWW3Client")
+
+components.append(Component("TWW3 Client",
+                            func=launch_client,
+                            component_type=Type.CLIENT))
+
+# components.append(Component("TWW3 Client",
+#                             func=launch_client,
+#                             component_type=Type.CLIENT,
+#                             icon="orc"))
+
+# icon_paths["orc"] = local_path("worlds", "tww3", "icons", "orc.png")
 
 class TWW3Item(Item):  # or from Items import MyGameItem
     game = "Total War Warhammer 3"  # name of the game/world this item is from
@@ -18,7 +34,7 @@ class TWW3Item(Item):  # or from Items import MyGameItem
 class TWW3Location(Location):  # or from Locations import MyGameLocation
     game = "Total War Warhammer 3"  # name of the game/world this location is in
 
-all_locations = {data["name"]: loc_id for loc_id, data in locations.location_table.items()}
+all_locations = {data["name"]: loc_id for loc_id, data in location_table.items()}
 
 class TWW3World(World):
     """Insert description of the world/game here."""

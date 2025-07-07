@@ -7,6 +7,7 @@ import copy
 from worlds.tww3.settlements import lord_name_to_faction_dict
 from worlds.tww3.items import item_table, ItemType
 from worlds.tww3.locations import location_table
+from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component
 import io
 import os
 
@@ -38,9 +39,11 @@ class WaaaghWatcher:
             if not line:
                 await asyncio.sleep(0.5)
                 continue
+            logger.info("Sending Location " + line.strip())
             await self.context.check(line.strip())
 
 class TWW3Context(CommonContext):
+    game = 'Total War Warhammer 3'
     command_processor = TWW3CommandProcessor
     items_handling = 0b111
 
@@ -48,8 +51,6 @@ class TWW3Context(CommonContext):
         super().__init__(server_address, password)
         self.initialized = False
         self.path = None
-
-        self.game = 'Total War Warhammer 3'
 
     def make_gui(self) -> "type[kvui.GameManager]":
         """
@@ -90,7 +91,7 @@ class TWW3Context(CommonContext):
         for key, entry in location_table.items():
             self.locationLookup[entry['name']] = int(key)
         self.playerFaction = lord_name_to_faction_dict[args['slot_data']['PlayerFaction']]
-        print("The Player Faction is: " + self.playerFaction)
+        logger.info("The Player Faction is: " + self.playerFaction)
         self.randitemList = args['slot_data']['Items']
         self.goalNumber = args['slot_data']['DominationGoal']
         self.spheres = args['slot_data']['Spheres']
@@ -99,8 +100,14 @@ class TWW3Context(CommonContext):
     def on_received_items(self, args: dict):
         numberOfGoalItems = 0
         numberOfSphereItems = 0
-        for entry in self.items_received:
+        # for entry in self.items_received:
+        print("Args ist: ")
+        print(args)
+        for entry in args["items"]:
+            print("entry " + str(entry))
             item = item_table[entry.item]
+            sender = "You" if entry.player == self.slot else f"Player {entry.player}"
+            logger.info(f"From: {sender} | Item: {item.name}")
             if item.type == ItemType.building:
                 self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.tech:
@@ -109,6 +116,7 @@ class TWW3Context(CommonContext):
                 self.waaaghMessenger.run("cm:remove_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.goal:
                 numberOfGoalItems = numberOfGoalItems + 1
+                logger.info("You now have: " + str(numberOfGoalItems) + "/" + str(self.goalNumber) + " Orbs of Domination" )
             elif item.type == ItemType.progression:
                 numberOfSphereItems = numberOfSphereItems + 1
                 self.triggerProgressionEvents(numberOfSphereItems)
@@ -148,7 +156,7 @@ class TWW3Context(CommonContext):
 
     async def get_path(self):
         if not self.path:
-            logger.info('Enter path:')
+            logger.info('Enter TWW3 Installation path:')
             self.path = await self.console_input()
             logger.info('Accepted Path is: ' + self.path)
             if not path or not os.path.exists(self.path):
@@ -199,7 +207,7 @@ class EngineInitializer():
                 waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (factionZero, faction))
         waaaghMessenger.flush()
 
-if __name__ == '__main__':
+def launch(*launch_args: str):
     Utils.init_logging('TWW3Client')
     logging.getLogger().setLevel(logging.INFO)
 
@@ -221,3 +229,27 @@ if __name__ == '__main__':
 
     asyncio.run(main(args))
     colorama.deinit()
+
+if __name__ == '__main__':
+    launch(*args)
+    # Utils.init_logging('TWW3Client')
+    # logging.getLogger().setLevel(logging.INFO)
+
+    # async def main(args):
+    #     ctx = TWW3Context(args.connect, args.password)
+    #     ctx.server_task = asyncio.create_task(server_loop(ctx), name='ServerLoop')
+
+    #     if gui_enabled:
+    #         ctx.run_gui()
+    #     ctx.run_cli()
+
+    #     await ctx.exit_event.wait()
+    #     ctx.server_address = None
+    #     await ctx.shutdown()
+
+    # parser = get_base_parser()
+    # args = parser.parse_args()
+    # colorama.just_fix_windows_console()
+
+    # asyncio.run(main(args))
+    # colorama.deinit()
