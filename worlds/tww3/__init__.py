@@ -44,7 +44,7 @@ class TWW3World(World):
     # settings: ClassVar[TWW3Settings]  # will be automatically assigned from type hint
     origin_region_name = "Old World"
     topology_present = False # show path to required location checks in spoiler
-    item_name_to_id = {data.name: item_id for item_id, data in items.item_table.items()}
+    item_name_to_id = {data.name: item_id for item_id, data in item_table.items()}
     # print("Sinthoras Debug:")
     # print(len(item_name_to_id))
     # print(len(items.item_table.values()))
@@ -116,17 +116,17 @@ class TWW3World(World):
         for item_id, item in item_table.items():
             if (item.faction == self.player_faction):
                 if (item.tier != None):
-                    if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit)):
+                    if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit) and (self.options.unit_shuffle.value == True)):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                    elif ((item.tier -1 > self.options.starting_tier.value) and (item.type == ItemType.building)):
+                    elif ((item.tier -1 > self.options.starting_tier.value) and (item.type == ItemType.building) and (self.options.building_shuffle.value == True)):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                    else:
+                    elif (self.options.tech_shuffle == True):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
