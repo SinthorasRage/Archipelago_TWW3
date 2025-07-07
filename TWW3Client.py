@@ -153,7 +153,7 @@ class TWW3Context(CommonContext):
             logger.info('Accepted Path is: ' + self.path)
             if not path or not os.path.exists(self.path):
                 logger.error('Path does not point to a directory')
-            if not os.path.isfile(self.path + '\Warhammer3.exe'):
+            if not os.path.isfile(self.path + '\\Warhammer3.exe'):
                 logger.error('No TWW3 exe in Path')
             else:
                 logger.info('Found TWW3 exe')
