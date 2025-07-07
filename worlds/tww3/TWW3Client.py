@@ -51,6 +51,8 @@ class TWW3Context(CommonContext):
         super().__init__(server_address, password)
         self.initialized = False
         self.path = None
+        self.numberOfGoalItems = 0
+        self.numberOfSphereItems = 0
 
     def make_gui(self) -> "type[kvui.GameManager]":
         """
@@ -98,8 +100,6 @@ class TWW3Context(CommonContext):
         EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.waaaghMessenger)
 
     def on_received_items(self, args: dict):
-        numberOfGoalItems = 0
-        numberOfSphereItems = 0
         # for entry in self.items_received:
         print("Args ist: ")
         print(args)
@@ -115,16 +115,17 @@ class TWW3Context(CommonContext):
             elif item.type == ItemType.unit:
                 self.waaaghMessenger.run("cm:remove_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.goal:
-                numberOfGoalItems = numberOfGoalItems + 1
-                logger.info("You now have: " + str(numberOfGoalItems) + "/" + str(self.goalNumber) + " Orbs of Domination" )
+                self.numberOfGoalItems = self.numberOfGoalItems + 1
+                logger.info("You now have: " + str(self.numberOfGoalItems) + "/" + str(self.goalNumber) + " Orbs of Domination" )
             elif item.type == ItemType.progression:
-                numberOfSphereItems = numberOfSphereItems + 1
-                self.triggerProgressionEvents(numberOfSphereItems)
+                self.numberOfSphereItems = self.numberOfSphereItems + 1
+                self.triggerProgressionEvents(self.numberOfSphereItems)
+                logger.info("You now have: " + str(self.numberOfSphereItems) + " Spheres of Influence" )
             elif item.type == ItemType.filler:
                 if item.name == "Gold":
                     self.waaaghMessenger.run("cm:treasury_mod(\"%s\", 10000)" % (self.playerFaction))
 
-        if numberOfGoalItems == self.goalNumber:
+        if self.numberOfGoalItems == self.goalNumber:
             asyncio.create_task(self.send_msgs([{"cmd": "StatusUpdate", "status": 30}]))
         self.waaaghMessenger.flush()
 

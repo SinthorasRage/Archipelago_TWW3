@@ -1123,7 +1123,7 @@ class Settlement_Manager():
         remaining_settlements_ids = [i for i in range(len(settlement_table))]
         new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
         i = self.random.randint(0, len(new_settlement_table) - 1)
-        new_settlement_table[i][1] = player_faction
+        new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
         player_settlement = new_settlement_table[i][0]
         self.faction_distance_dict[player_faction] = 0
         remaining_settlements_ids.pop(i)
@@ -1132,6 +1132,7 @@ class Settlement_Manager():
         major_factions_keys = self.get_shuffled_major_faction_ids()
         minor_factions_keys = self.get_shuffled_minor_faction_ids()
         self.random.shuffle(major_factions_keys)
+        major_factions_keys.remove(self.faction_to_faction_id(player_faction))
         self.random.shuffle(minor_factions_keys)
         for i in range(len(major_factions_keys)):
                 if (remaining_settlements > 0):
@@ -1159,6 +1160,7 @@ class Settlement_Manager():
                 remaining_settlements -= 1
             else:
                 break
+        major_factions_keys.append(self.faction_to_faction_id(player_faction))
         while (remaining_settlements > 0):
             # Randomize faction order
             self.random.shuffle(major_factions_keys)
