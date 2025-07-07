@@ -126,6 +126,11 @@ class TWW3World(World):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
+                    else:
+                        for i in range(item.count):
+                            tww3_item = self.create_item(item.name)
+                            pool.append(tww3_item)
+                            self.item_list.append(item_id)
 
         for _ in range(self.options.domination_option.value):
             tww3_item = self.create_item("Orb of Domination")
