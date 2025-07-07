@@ -982,6 +982,7 @@ class Settlement_Manager():
         self.settlement_table = settlement_table
         self.new_settlement_dict = {}
         self.faction_distance_dict = {}
+        self.capital_dict = {}
         self.random = random
 
     def calculateDistance(self, s1: int, s2: int) -> int:
@@ -1056,6 +1057,9 @@ class Settlement_Manager():
                 "faction": settlement[1]
             }
         return settlement_table
+    
+    def get_capital_dict(self):
+        return self.capital_dict
 
     def shuffle_settlements_old(self, player_faction: str):
         remaining_settlements = len(settlement_table)
@@ -1125,6 +1129,7 @@ class Settlement_Manager():
         i = self.random.randint(0, len(new_settlement_table) - 1)
         new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
         player_settlement = new_settlement_table[i][0]
+        self.capital_dict[player_faction] = player_settlement
         self.faction_distance_dict[player_faction] = 0
         remaining_settlements_ids.pop(i)
         remaining_settlements -= 1
@@ -1143,6 +1148,7 @@ class Settlement_Manager():
                         self.faction_distance_dict[self.faction_id_to_faction(major_factions_keys[i])] = (
                             self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
                         )
+                        self.capital_dict[self.faction_id_to_faction(major_factions_keys[i])] = faction_settlement
                     remaining_settlements_ids.pop(a)
                     remaining_settlements -= 1
                 else:
@@ -1156,6 +1162,7 @@ class Settlement_Manager():
                     self.faction_distance_dict[self.faction_id_to_faction(minor_factions_keys[i])] = (
                         self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
                     )
+                    self.capital_dict[self.faction_id_to_faction(minor_factions_keys[i])] = faction_settlement
                 remaining_settlements_ids.pop(a)
                 remaining_settlements -= 1
             else:

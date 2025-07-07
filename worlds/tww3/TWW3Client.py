@@ -20,6 +20,11 @@ class TWW3CommandProcessor(ClientCommandProcessor):
             for faction, reqSphere in sorted_spheres.items():
                 logger.info("Faction: " + faction + " " + str(reqSphere) + " spheres")
 
+    def _cmd_capitals(self):
+        if isinstance(self.ctx, TWW3Context):
+            for faction, capital in self.ctx.capitals.items():
+                logger.info("Faction: " + faction + " Capital: " + capital)
+
 class WaaaghMessenger:
     def __init__(self, path):
         self.file = open(path, 'w+')
@@ -101,7 +106,8 @@ class TWW3Context(CommonContext):
         self.randitemList = args['slot_data']['Items']
         self.goalNumber = args['slot_data']['DominationGoal']
         self.spheres = args['slot_data']['Spheres']
-        EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.waaaghMessenger)
+        self.capitals = args['slot_data']['FactionCapitals']
+        EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.capitals, self.waaaghMessenger)
 
     def on_received_items(self, args: dict):
         # for entry in self.items_received:
@@ -185,9 +191,10 @@ class TWW3Context(CommonContext):
 
 class EngineInitializer():
     @classmethod
-    def initialize(cls, settlements, randitem_list, playerFaction, spheres, waaaghMessenger):
+    def initialize(cls, settlements, randitem_list, playerFaction, spheres, capitals, waaaghMessenger):
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
+        for faction, settlement in capitals.items():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for itemNumber in randitem_list:

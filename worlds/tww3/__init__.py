@@ -169,6 +169,7 @@ class TWW3World(World):
         slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["Settlements"] = self.settlement_table
         slot_data["Spheres"] = self.factions_to_spheres
+        slot_data["FactionCapitals"] = self.sm.get_capital_dict()
         slot_data["Items"] = self.item_list
         
 
