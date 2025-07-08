@@ -15,10 +15,6 @@ import io
 import os
 
 path = "."
-item_table = dict(progression_table)
-item_table.update(filler_table)
-item_table.update(unique_item_table)
-item_table.update(progressive_buildings_table)
 
 class TWW3CommandProcessor(ClientCommandProcessor):    
     def _cmd_spheres(self):
@@ -69,6 +65,11 @@ class TWW3Context(CommonContext):
         self.path = None
         self.numberOfGoalItems = 0
         self.numberOfSphereItems = 0
+        self.item_table = dict(progression_table)
+        self.item_table.update(filler_table)
+        self.item_table.update(unique_item_table)
+        self.item_table.update(progressive_buildings_table)
+        self.progressive_items_flags = {key: False for key in self.item_table.keys()}
 
     # def make_gui(self) -> "type[kvui.GameManager]":
     #     """
@@ -121,16 +122,13 @@ class TWW3Context(CommonContext):
 
     def on_received_items(self, args: dict):
         # for entry in self.items_received:
-        print("Args ist: ")
-        print(args)
         for entry in args["items"]:
-            print("entry " + str(entry))
-            item = item_table[entry.item]
+            item = self.item_table[entry.item]
             sender = "You" if entry.player == self.slot else f"Player {entry.player}"
             logger.info(f"From: {sender} | Item: {item.name}")
             if item.type == ItemType.building:
                 if (self.progressiveBuildings == True):
-                    self.send_next_progressive_building(item.progressionGroup)
+                    self.send_next_progressive_building(item.name)
                 else:
                     self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.tech:
@@ -153,13 +151,14 @@ class TWW3Context(CommonContext):
         self.waaaghMessenger.flush()
 
     def send_next_progressive_building(self, progressionGroup):
-        for item in item_table:
-            if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup) and (item.checked == False)):
-                item.checked == True
+        for id, item in self.item_table.items():
+            # if (item.name == "wh2_main_hef_barracks_2"):
+            #     print("Sinthoras: " + item.name + " " + item.faction + " " + item.progressionGroup + " " + str(self.progressive_items_flags))
+            if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup) and (self.progressive_items_flags[id] == False)):
+                self.progressive_items_flags[id] = True
                 self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
-                break
-            else:
-                raise Exception("Progressive Building " + progressionGroup + " not found in item_table")
+                return
+        raise Exception("Progressive Building " + progressionGroup + " not found in item_table")
 
     def triggerProgressionEvents(self, numberOfSphereItems):
         oldSphere = []
@@ -226,7 +225,7 @@ class EngineInitializer():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for itemNumber in randitem_list:
-            itemData = item_table[itemNumber]
+            itemData = context.item_table[itemNumber]
             if itemData.type == ItemType.tech:
                 waaaghMessenger.run("cm:lock_one_technology_node(\"%s\", \"%s\")" % (playerFaction, itemData.name))
             elif ((itemData.type == ItemType.building) and (context.progressiveBuildings == False) and (itemData.progressionGroup != None)):
@@ -234,7 +233,7 @@ class EngineInitializer():
             elif itemData.type == ItemType.unit:
                 waaaghMessenger.run("cm:add_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (itemData.name, playerFaction))
         if (context.progressiveBuildings == True):
-            cls.lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger)
+            cls.lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger, context.item_table, context.progressive_items_flags)
         sphereZeroFactions = []
         sphereAllOthers = []
         for faction, sphere in spheres.items():
@@ -249,13 +248,16 @@ class EngineInitializer():
                 waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (factionZero, faction))
         waaaghMessenger.flush()
 
-    def lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger):
-        for item in item_table.values():
+    def lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger, item_table, progressive_items_flags):
+        for id, item in item_table.items():
             if ((item.faction == playerFaction) and (item.type == ItemType.building) and (item.progressionGroup != None)):
                 if (item.tier + 1 > startingTier):
                     waaaghMessenger.run("cm:add_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, playerFaction))
                 else:
-                    item.checked == True
+                    progressive_items_flags[id] = True
+                    # print("Sinthoras: ")
+                    # print(id)
+                    # print(progressive_items_flags[id])
 
 def launch(*launch_args: str):
     Utils.init_logging('TWW3Client')
