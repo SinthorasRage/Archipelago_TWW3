@@ -63,22 +63,22 @@ class TWW3Context(CommonContext):
         self.numberOfGoalItems = 0
         self.numberOfSphereItems = 0
 
-    def make_gui(self) -> "type[kvui.GameManager]":
-        """
-        To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
+    # def make_gui(self) -> "type[kvui.GameManager]":
+    #     """
+    #     To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
 
-        Common changes are changing `base_title` to update the window title of the client and
-        updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
+    #     Common changes are changing `base_title` to update the window title of the client and
+    #     updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
 
-        ex. `logging_pairs.append(("Foo", "Bar"))`
-        will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
-        """
-        from kvui import GameManager
+    #     ex. `logging_pairs.append(("Foo", "Bar"))`
+    #     will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
+    #     """
+    #     from kvui import GameManager
 
-        class TextManager(GameManager):
-            base_title = "TWW3 Client"
+    #     class TextManager(GameManager):
+    #         base_title = "TWW3 Client"
 
-        return TextManager
+    #     return TextManager
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -158,9 +158,6 @@ class TWW3Context(CommonContext):
                 self.waaaghMessenger.run("cm:force_make_peace(\"%s\", \"%s\")" % (newFaction, otherFaction))
                 self.waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (newFaction, otherFaction))
         return
-
-    def on_print_json(self, args: dict):
-        pass #print(args)
 
     async def check(self, location):
         await self.check_locations([self.locationLookup[location]])
