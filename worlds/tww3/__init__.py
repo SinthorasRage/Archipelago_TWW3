@@ -6,6 +6,7 @@ from .item_tables.items import ItemType
 from .item_tables.progression_filler_table import progression_table, filler_table
 from .item_tables.unique_item_table import unique_item_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
+from .item_tables.progressive_units_table import progressive_units_table
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
@@ -51,6 +52,7 @@ class TWW3World(World):
     item_table.update(filler_table)
     item_table.update(unique_item_table)
     item_table.update(progressive_buildings_table)
+    item_table.update(progressive_units_table)
     item_name_to_id = {data.name: item_id for item_id, data in item_table.items()}
     # print("Sinthoras Debug:")
     # print(len(item_name_to_id))
@@ -123,7 +125,7 @@ class TWW3World(World):
         for item_id, item in unique_item_table.items():
             if (item.faction == self.player_faction):
                 if (item.tier != None):
-                    if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit) and (self.options.unit_shuffle.value == True)):
+                    if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit) and (self.options.unit_shuffle.value == True) and (self.options.progressive_units == False)):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
@@ -138,6 +140,12 @@ class TWW3World(World):
                         tww3_item = self.create_item(item.name)
                         pool.append(tww3_item)
                         self.item_list.append(item_id)
+
+        if (self.options.progressive_units == True):
+            for item_id, item in progressive_units_table.items():
+                if ((item.faction == self.player_faction) and (item.tier > self.options.starting_tier.value) and (self.options.unit_shuffle.value == True)):
+                    tww3_item = self.create_item(item.name)
+                    pool.append(tww3_item)
 
         if (self.options.progressive_buildings == True):
             for item_id, item in progressive_buildings_table.items():

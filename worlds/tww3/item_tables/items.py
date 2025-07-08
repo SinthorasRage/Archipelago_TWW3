@@ -19,7 +19,6 @@ class ItemData(NamedTuple):
     faction: str
     tier: int
     progressionGroup: str
-    checked: bool
 
 # filler_table: Dict[int, ItemData] = {
 #     2000: ItemData(IC.filler, 0, "Gold", ItemType.filler, "None", None, None, False)
