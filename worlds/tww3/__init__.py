@@ -2,7 +2,10 @@ from typing import List, Dict, Any, cast, Mapping
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 from .options import TWW3Options  # the options we defined earlier
-from .items import item_table, ItemType  # data used below to add items to the World
+from .item_tables.items import ItemType
+from .item_tables.progression_filler_table import progression_table, filler_table
+from .item_tables.unique_item_table import unique_item_table
+from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
@@ -44,6 +47,10 @@ class TWW3World(World):
     # settings: ClassVar[TWW3Settings]  # will be automatically assigned from type hint
     origin_region_name = "Old World"
     topology_present = False # show path to required location checks in spoiler
+    item_table = dict(progression_table)
+    item_table.update(filler_table)
+    item_table.update(unique_item_table)
+    item_table.update(progressive_buildings_table)
     item_name_to_id = {data.name: item_id for item_id, data in item_table.items()}
     # print("Sinthoras Debug:")
     # print(len(item_name_to_id))
@@ -113,7 +120,7 @@ class TWW3World(World):
         # Generate item pool
         pool: List[TWW3Item] = []
 
-        for item_id, item in item_table.items():
+        for item_id, item in unique_item_table.items():
             if (item.faction == self.player_faction):
                 if (item.tier != None):
                     if ((item.tier > self.options.starting_tier.value) and (item.type == ItemType.unit) and (self.options.unit_shuffle.value == True)):
@@ -121,7 +128,7 @@ class TWW3World(World):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                    elif ((item.tier +1 > self.options.starting_tier.value) and (item.type == ItemType.building) and (self.options.building_shuffle.value == True)):
+                    elif ((item.tier +1 > self.options.starting_tier.value) and (item.type == ItemType.building) and (self.options.building_shuffle.value == True) and (self.options.progressive_buildings == False)):
                         for i in range(item.count):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
@@ -131,6 +138,12 @@ class TWW3World(World):
                         tww3_item = self.create_item(item.name)
                         pool.append(tww3_item)
                         self.item_list.append(item_id)
+
+        if (self.options.progressive_buildings == True):
+            for item_id, item in progressive_buildings_table.items():
+                if ((item.faction == self.player_faction) and (item.tier +1 > self.options.starting_tier.value) and (self.options.building_shuffle.value == True)):
+                    tww3_item = self.create_item(item.name)
+                    pool.append(tww3_item)
 
         for _ in range(self.options.domination_option.value):
             tww3_item = self.create_item("Orb of Domination")
@@ -160,12 +173,11 @@ class TWW3World(World):
         :return: A dictionary to be sent to the client when it connects to the server.
         """
         slot_data: Dict = {}
-
-        # Add entrances to `slot_data`. This is the same data that is written to the .aptww file.
         
         slot_data["PlayerFaction"] = self.options.starting_faction.value
         slot_data["ProgressiveBuildings"] = self.options.progressive_buildings.value
         slot_data["ProgressiveUnits"] = self.options.progressive_units.value
+        slot_data["StartingTier"] = self.options.starting_tier.value
         slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["Settlements"] = self.settlement_table
         slot_data["Spheres"] = self.factions_to_spheres
@@ -178,4 +190,4 @@ class TWW3World(World):
     def create_item(self, name: str) -> TWW3Item:
         item_id: int = self.item_name_to_id[name]
 
-        return TWW3Item(name, item_table[item_id].classification, item_id, player=self.player)
+        return TWW3Item(name, self.item_table[item_id].classification, item_id, player=self.player)

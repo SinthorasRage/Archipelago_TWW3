@@ -5,13 +5,20 @@ import colorama
 import logging
 import copy
 from worlds.tww3.settlements import lord_name_to_faction_dict
-from worlds.tww3.items import item_table, ItemType
+from .item_tables.items import ItemType
+from .item_tables.progression_filler_table import progression_table, filler_table
+from .item_tables.unique_item_table import unique_item_table
+from .item_tables.progressive_buildings_table import progressive_buildings_table
 from worlds.tww3.locations import location_table
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component
 import io
 import os
 
 path = "."
+item_table = dict(progression_table)
+item_table.update(filler_table)
+item_table.update(unique_item_table)
+item_table.update(progressive_buildings_table)
 
 class TWW3CommandProcessor(ClientCommandProcessor):    
     def _cmd_spheres(self):
@@ -107,7 +114,10 @@ class TWW3Context(CommonContext):
         self.goalNumber = args['slot_data']['DominationGoal']
         self.spheres = args['slot_data']['Spheres']
         self.capitals = args['slot_data']['FactionCapitals']
-        EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.capitals, self.waaaghMessenger)
+        self.progressiveBuildings = args['slot_data']['ProgressiveBuildings']
+        self.startingTier = args['slot_data']['StartingTier']
+        #EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.capitals, self.waaaghMessenger)
+        EngineInitializer.initialize(self)
 
     def on_received_items(self, args: dict):
         # for entry in self.items_received:
@@ -119,7 +129,10 @@ class TWW3Context(CommonContext):
             sender = "You" if entry.player == self.slot else f"Player {entry.player}"
             logger.info(f"From: {sender} | Item: {item.name}")
             if item.type == ItemType.building:
-                self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
+                if (self.progressiveBuildings == True):
+                    self.send_next_progressive_building(item.progressionGroup)
+                else:
+                    self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.tech:
                 self.waaaghMessenger.run("cm:unlock_technology(\"%s\", \"%s\")" % (self.playerFaction, item.name))
             elif item.type == ItemType.unit:
@@ -138,6 +151,15 @@ class TWW3Context(CommonContext):
         if self.numberOfGoalItems == self.goalNumber:
             asyncio.create_task(self.send_msgs([{"cmd": "StatusUpdate", "status": 30}]))
         self.waaaghMessenger.flush()
+
+    def send_next_progressive_building(self, progressionGroup):
+        for item in item_table:
+            if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup) and (item.checked == False)):
+                item.checked == True
+                self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
+                break
+            else:
+                raise Exception("Progressive Building " + progressionGroup + " not found in item_table")
 
     def triggerProgressionEvents(self, numberOfSphereItems):
         oldSphere = []
@@ -187,8 +209,17 @@ class TWW3Context(CommonContext):
         self.ui_task = asyncio.create_task(self.ui.async_run(), name="UI")
 
 class EngineInitializer():
+
     @classmethod
-    def initialize(cls, settlements, randitem_list, playerFaction, spheres, capitals, waaaghMessenger):
+    # def initialize(cls, settlements, randitem_list, playerFaction, spheres, capitals, waaaghMessenger):
+    def initialize(cls, context):
+        settlements = context.settlements
+        randitem_list = context.randitemList
+        playerFaction = context.playerFaction
+        spheres = context.spheres
+        capitals = context.capitals
+        startingTier = context.startingTier
+        waaaghMessenger = context.waaaghMessenger
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
         for faction, settlement in capitals.items():
@@ -198,10 +229,12 @@ class EngineInitializer():
             itemData = item_table[itemNumber]
             if itemData.type == ItemType.tech:
                 waaaghMessenger.run("cm:lock_one_technology_node(\"%s\", \"%s\")" % (playerFaction, itemData.name))
-            elif itemData.type == ItemType.building:
+            elif ((itemData.type == ItemType.building) and (context.progressiveBuildings == False) and (itemData.progressionGroup != None)):
                 waaaghMessenger.run("cm:add_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (itemData.name, playerFaction))
             elif itemData.type == ItemType.unit:
                 waaaghMessenger.run("cm:add_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (itemData.name, playerFaction))
+        if (context.progressiveBuildings == True):
+            cls.lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger)
         sphereZeroFactions = []
         sphereAllOthers = []
         for faction, sphere in spheres.items():
@@ -215,6 +248,14 @@ class EngineInitializer():
                 waaaghMessenger.run("cm:force_make_peace(\"%s\", \"%s\")" % (factionZero, faction))
                 waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (factionZero, faction))
         waaaghMessenger.flush()
+
+    def lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger):
+        for item in item_table.values():
+            if ((item.faction == playerFaction) and (item.type == ItemType.building) and (item.progressionGroup != None)):
+                if (item.tier + 1 > startingTier):
+                    waaaghMessenger.run("cm:add_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, playerFaction))
+                else:
+                    item.checked == True
 
 def launch(*launch_args: str):
     Utils.init_logging('TWW3Client')
