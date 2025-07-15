@@ -70,7 +70,7 @@ class TWW3World(World):
         #self.player_faction = self.options.starting_faction.value
         self.player_faction = lord_name_to_faction_dict[self.options.starting_faction]
         self.sm: Settlement_Manager = Settlement_Manager(self.random)
-        self.settlement_table: Dict = self.sm.shuffle_settlements(self.player_faction) 
+        self.settlement_table, self.horde_table = self.sm.shuffle_settlements(self.player_faction) 
 
     def create_regions(self):
         # Create Region
@@ -188,6 +188,7 @@ class TWW3World(World):
         slot_data["StartingTier"] = self.options.starting_tier.value
         slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["Settlements"] = self.settlement_table
+        slot_data["Hordes"] = self.horde_table
         slot_data["Spheres"] = self.factions_to_spheres
         slot_data["FactionCapitals"] = self.sm.get_capital_dict()
         slot_data["Items"] = self.item_list

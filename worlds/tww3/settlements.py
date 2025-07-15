@@ -1,4 +1,3 @@
-#import random
 from typing import TypedDict, NamedTuple
 import math
 
@@ -981,6 +980,7 @@ class Settlement_Manager():
         self.faction_table = faction_table
         self.settlement_table = settlement_table
         self.new_settlement_dict = {}
+        self.new_horde_dict = {}
         self.faction_distance_dict = {}
         self.capital_dict = {}
         self.random = random
@@ -998,6 +998,11 @@ class Settlement_Manager():
     def faction_id_to_faction(self, faction_id):
         i = faction_table[faction_id][0]
         return i
+     
+    def has_home_region(self, playerFaction):
+        for row in faction_table:
+            if row[0] == playerFaction:
+                return row[2]
     
     def settlement_to_id(self, settlement: str) -> int:
         for i in range(len(settlement_table)):
@@ -1008,34 +1013,34 @@ class Settlement_Manager():
     def settlement_to_faction(self, settlement_name: str) -> str:
         return self.new_settlement_dict[settlement_name]
 
-    def get_shuffled_major_faction_ids(self):
+    def get_major_faction_ids(self):
         shuffled_major_faction_ids = []
         for i in range(len(faction_table)):
             if faction_table[i][1] == True and faction_table[i][2] == True:
                 shuffled_major_faction_ids.append(i)
         return shuffled_major_faction_ids
 
-    def get_shuffled_minor_faction_ids(self):
+    def get_minor_faction_ids(self):
         shuffled_minor_faction_ids = []
         for i in range(len(faction_table)):
             if faction_table[i][1] == False and faction_table[i][2] == True:
                 shuffled_minor_faction_ids.append(i)
         return shuffled_minor_faction_ids
 
-    def get_shuffled_major_horde_faction_ids(self):
+    def get_major_horde_faction_ids(self):
         shuffled_major_faction_ids = []
         for i in range(len(faction_table)):
             if faction_table[i][1] == True and faction_table[i][2] == False:
                 shuffled_major_faction_ids.append(i)
         return shuffled_major_faction_ids
 
-    def get_shuffled_minor_horde_faction_ids(self):
+    def get_minor_horde_faction_ids(self):
         shuffled_minor_faction_ids = []
         for i in range(len(faction_table)):
             if faction_table[i][1] == False and faction_table[i][2] == False:
                 shuffled_minor_faction_ids.append(i)
         return shuffled_minor_faction_ids
-    
+        
     def get_distance(self, faction_key: str) -> int:
         return self.faction_distance_dict[faction_key]
     
@@ -1060,56 +1065,6 @@ class Settlement_Manager():
     
     def get_capital_dict(self):
         return self.capital_dict
-
-    def shuffle_settlements_old(self, player_faction: str):
-        remaining_settlements = len(settlement_table)
-        remaining_settlements_ids = [i for i in range(len(settlement_table))]
-        new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
-        i = self.random.randint(0, len(new_settlement_table) - 1)
-        new_settlement_table[i][1] = player_faction
-        player_settlement = new_settlement_table[i][0]
-        self.faction_distance_dict[player_faction] = 0
-        remaining_settlements_ids.pop(i)
-        remaining_settlements -= 1
-        first_loop = True
-        major_factions_keys = self.get_shuffled_major_faction_ids()
-        minor_factions_keys = self.get_shuffled_minor_faction_ids()
-        while (remaining_settlements > 0):
-            if first_loop == True:
-                major_factions_keys.remove(self.faction_to_faction_id(player_faction))
-            for i in range(len(major_factions_keys)):
-                if (remaining_settlements > 0):
-                    a = self.random.randint(0, len(remaining_settlements_ids) - 1)
-                    new_settlement_table[remaining_settlements_ids[a]][1] = major_factions_keys[i]
-                    if first_loop == True:
-                        faction_settlement = new_settlement_table[remaining_settlements_ids[a]][0]
-                        self.faction_distance_dict[self.faction_id_to_faction(major_factions_keys[i])] = (
-                            self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
-                        )
-                    remaining_settlements_ids.pop(a)
-                    remaining_settlements -= 1
-                else:
-                    break
-            for i in range(len(minor_factions_keys)):
-                if (remaining_settlements > 0):
-                    a = self.random.randint(0, len(remaining_settlements_ids) - 1)
-                    new_settlement_table[remaining_settlements_ids[a]][1] = minor_factions_keys[i]
-                    if first_loop == True:
-                        faction_settlement = new_settlement_table[remaining_settlements_ids[a]][0]
-                        self.faction_distance_dict[self.faction_id_to_faction(minor_factions_keys[i])] = (
-                            self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(faction_settlement))
-                        )
-                    remaining_settlements_ids.pop(a)
-                    remaining_settlements -= 1
-                else:
-                    break
-            if first_loop == True:
-                first_loop = False
-        for i in range(len(new_settlement_table)):
-            if isinstance(new_settlement_table[i][1], int):
-                new_settlement_table[i][1] = self.faction_id_to_faction(new_settlement_table[i][1])
-        self.new_settlement_dict = {row[0]: row[1] for row in new_settlement_table}
-        return self.new_settlement_dict
     
     def get_closest_available_settlement(self, target_settlement_id: int, remaining_settlements_ids, new_settlement_table):
         if not remaining_settlements_ids:
@@ -1125,19 +1080,28 @@ class Settlement_Manager():
     def shuffle_settlements(self, player_faction: str):
         remaining_settlements = len(settlement_table)
         remaining_settlements_ids = [i for i in range(len(settlement_table))]
+        remaining_horde_settlement_ids = [i for i in range(len(settlement_table))]
         new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
+        new_horde_table = []
         i = self.random.randint(0, len(new_settlement_table) - 1)
-        new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
+        if self.has_home_region(player_faction):
+            new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
+        else:
+            new_horde_table.append([new_settlement_table[i][0], self.faction_to_faction_id(player_faction)])
         player_settlement = new_settlement_table[i][0]
         self.capital_dict[player_faction] = player_settlement
         self.faction_distance_dict[player_faction] = 0
-        remaining_settlements_ids.pop(i)
-        remaining_settlements -= 1
+        if self.has_home_region(player_faction):
+            remaining_settlements_ids.pop(i)
+            remaining_settlements -= 1
+        else:
+            remaining_horde_settlement_ids.pop(i)
         first_loop = True
-        major_factions_keys = self.get_shuffled_major_faction_ids()
-        minor_factions_keys = self.get_shuffled_minor_faction_ids()
+        major_factions_keys = self.get_major_faction_ids()
+        minor_factions_keys = self.get_minor_faction_ids()
         self.random.shuffle(major_factions_keys)
-        major_factions_keys.remove(self.faction_to_faction_id(player_faction))
+        if self.has_home_region(player_faction):
+            major_factions_keys.remove(self.faction_to_faction_id(player_faction))
         self.random.shuffle(minor_factions_keys)
         for i in range(len(major_factions_keys)):
                 if (remaining_settlements > 0):
@@ -1167,7 +1131,8 @@ class Settlement_Manager():
                 remaining_settlements -= 1
             else:
                 break
-        major_factions_keys.append(self.faction_to_faction_id(player_faction))
+        if self.has_home_region(player_faction):
+            major_factions_keys.append(self.faction_to_faction_id(player_faction))
         while (remaining_settlements > 0):
             # Randomize faction order
             self.random.shuffle(major_factions_keys)
@@ -1196,12 +1161,28 @@ class Settlement_Manager():
                 new_settlement_table[closest_Settlement][1] = faction
                 remaining_settlements_ids.remove(closest_Settlement)
                 remaining_settlements -= 1
+        horde_keys = self.get_major_horde_faction_ids()
+        horde_keys.append(self.get_minor_faction_ids())
+        horde_keys.remove(self.faction_to_faction_id(player_faction))
+        for faction in horde_keys:
+            i = self.random.randint(0, len(remaining_horde_settlement_ids) - 1)
+            new_horde_table.append([new_settlement_table[i][0], faction])
+            remaining_horde_settlement_ids.pop(i)
 
         for i in range(len(new_settlement_table)):
             if isinstance(new_settlement_table[i][1], int):
                 new_settlement_table[i][1] = self.faction_id_to_faction(new_settlement_table[i][1])
         self.new_settlement_dict = {row[0]: row[1] for row in new_settlement_table}
-        return self.new_settlement_dict
+        for i in range(len(new_horde_table)):
+            if isinstance(new_horde_table[i][1], int):
+                new_horde_table[i][1] = self.faction_id_to_faction(new_horde_table[i][1])
+        self.new_horde_dict = {row[0]: row[1] for row in new_horde_table}
+        return self.new_settlement_dict, self.new_horde_dict
+
+    # def shuffle_starting_Positions(self, playerFaction):
+    #     if has_home_region(playerFaction):
+    #         new_settlement_dict = shuffle_settlements(player_faction: str, has_home_region)
+    
 
 # sm = Settlement_Manager(random)
 # table = sm.shuffle_settlements("wh_main_emp_empire")

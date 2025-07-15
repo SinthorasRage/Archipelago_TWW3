@@ -108,6 +108,7 @@ class TWW3Context(CommonContext):
         waaaghWatcher_task = asyncio.create_task(self.waaaghWatcher.watch(), name='WaaaghWatcher')
         self.waaaghMessenger = WaaaghMessenger(self.path + '\\engine.in')
         self.settlements = args['slot_data']['Settlements']
+        self.hordes = args['slot_data']['Hordes']
         self.locationLookup = dict()
         for key, entry in location_table.items():
             self.locationLookup[entry['name']] = int(key)
@@ -228,6 +229,7 @@ class EngineInitializer():
     # def initialize(cls, settlements, randitem_list, playerFaction, spheres, capitals, waaaghMessenger):
     def initialize(cls, context):
         settlements = context.settlements
+        hordes = context.hordes
         randitem_list = context.randitemList
         playerFaction = context.playerFaction
         spheres = context.spheres
@@ -237,6 +239,9 @@ class EngineInitializer():
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
         for faction, settlement in capitals.items():
+            waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
+            waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
+        for settlement, faction in hordes.items():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for itemNumber in randitem_list:
