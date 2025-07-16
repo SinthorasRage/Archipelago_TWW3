@@ -71,7 +71,7 @@ class TWW3World(World):
         #self.player_faction = self.options.starting_faction.value
         self.player_faction = lord_name_to_faction_dict[self.options.starting_faction]
         self.sm: Settlement_Manager = Settlement_Manager(self.random)
-        self.settlement_table, self.horde_table = self.sm.shuffle_settlements(self.player_faction) 
+        self.settlement_table, self.horde_table = self.sm.shuffle_settlements(self.player_faction, self.options.max_range) 
 
     def create_regions(self):
         # Create Region

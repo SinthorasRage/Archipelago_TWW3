@@ -107,6 +107,12 @@ class Faction(Choice):
 class FactionShuffle(DefaultOnToggle):
     display_name = "FactionShuffle"
 
+class MaxRange(Range):
+    # How far away a Settlement can be from a factions other settlements.
+    range_start = 50
+    range_end = 1500
+    default = 200
+
 class TechShuffle(Toggle):
     display_name = "TechShuffle"
 
@@ -170,6 +176,7 @@ class Domination_Amount(Range):
 class TWW3Options(PerGameCommonOptions):
     starting_faction: Faction
     faction_shuffle: FactionShuffle
+    max_range: MaxRange
     tech_shuffle: TechShuffle
     building_shuffle: BuildingShuffle
     progressive_buildings: ProgressiveBuildings

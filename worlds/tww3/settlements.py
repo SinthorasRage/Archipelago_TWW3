@@ -1066,7 +1066,7 @@ class Settlement_Manager():
     def get_capital_dict(self):
         return self.capital_dict
     
-    def get_closest_available_settlement(self, target_settlement_id: int, remaining_settlements_ids, new_settlement_table):
+    def get_closest_available_settlement(self, target_settlement_id: int, remaining_settlements_ids, new_settlement_table, max_range):
         if not remaining_settlements_ids:
             return None
         sorted_settlements = sorted(
@@ -1075,9 +1075,12 @@ class Settlement_Manager():
                 target_settlement_id, sid
             )
         )
-        return sorted_settlements[0] if sorted_settlements else None
+        if (sorted_settlements[0] <= max_range):
+            return sorted_settlements[0]
+        else:
+            return None
 
-    def shuffle_settlements(self, player_faction: str):
+    def shuffle_settlements(self, player_faction: str, max_range: int):
         remaining_settlements = len(settlement_table)
         remaining_settlements_ids = [i for i in range(len(settlement_table))]
         remaining_horde_settlement_ids = [i for i in range(len(settlement_table))]
@@ -1133,6 +1136,7 @@ class Settlement_Manager():
                 break
         if self.has_home_region(player_faction):
             major_factions_keys.append(self.faction_to_faction_id(player_faction))
+        breakout_counter = 0
         while (remaining_settlements > 0):
             # Randomize faction order
             self.random.shuffle(major_factions_keys)
@@ -1144,10 +1148,14 @@ class Settlement_Manager():
                     if new_settlement_table[i][1] == faction:
                         faction_settlement_list.append(self.settlement_to_id(new_settlement_table[i][0]))
                 r = self.random.randint(0, len(faction_settlement_list) - 1)
-                closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table)
-                new_settlement_table[closest_Settlement][1] = faction
-                remaining_settlements_ids.remove(closest_Settlement)
-                remaining_settlements -= 1
+                if (breakout_counter < 7):
+                    closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table, max_range)
+                else:
+                    closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table, 1500)
+                if closest_Settlement != None:
+                    new_settlement_table[closest_Settlement][1] = faction
+                    remaining_settlements_ids.remove(closest_Settlement)
+                    remaining_settlements -= 1
             self.random.shuffle(minor_factions_keys)
             for faction in minor_factions_keys:
                 if (remaining_settlements == 0):
@@ -1157,10 +1165,15 @@ class Settlement_Manager():
                     if new_settlement_table[i][1] == faction:
                         faction_settlement_list.append(self.settlement_to_id(new_settlement_table[i][0]))
                 r = self.random.randint(0, len(faction_settlement_list) - 1)
-                closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table)
-                new_settlement_table[closest_Settlement][1] = faction
-                remaining_settlements_ids.remove(closest_Settlement)
-                remaining_settlements -= 1
+                if (breakout_counter < 7):
+                    closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table, max_range)
+                else:
+                    closest_Settlement = self.get_closest_available_settlement(faction_settlement_list[r], remaining_settlements_ids, new_settlement_table, 1500)
+                if closest_Settlement != None:
+                    new_settlement_table[closest_Settlement][1] = faction
+                    remaining_settlements_ids.remove(closest_Settlement)
+                    remaining_settlements -= 1
+            breakout_counter += 1
         horde_keys = self.get_major_horde_faction_ids()
         horde_keys.append(self.get_minor_faction_ids())
         horde_keys.remove(self.faction_to_faction_id(player_faction))
