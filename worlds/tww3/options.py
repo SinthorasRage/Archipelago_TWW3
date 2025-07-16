@@ -142,6 +142,15 @@ class SphereDistance(Range):
 class SphereWorld(Toggle):
     display_name = "Should Settlements outside last Sphere be included in last Sphere"
 
+class BalanceSpheres(Toggle):
+    display_name = "Should Unlocks be requirements for the next sphere"
+
+class BalanceSpheresPercentage(Range):
+    # How many percantage of checks in per sphere needs to be at least unlocks.
+    range_start = 1
+    range_end = 100
+    default = 50
+
 class Goal(Choice):
     auto_display_name = True
     display_name = "Goal"
@@ -170,6 +179,8 @@ class TWW3Options(PerGameCommonOptions):
     spheres_option: Spheres
     sphere_distance: SphereDistance
     sphere_world: SphereWorld
+    balance_spheres: BalanceSpheres
+    balance_spheres_percentage: BalanceSpheresPercentage
     goal: Goal
     domination_option: Domination_Amount
 

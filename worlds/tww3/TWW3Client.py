@@ -151,7 +151,7 @@ class TWW3Context(CommonContext):
                 logger.info("You now have: " + str(self.numberOfSphereItems) + " Spheres of Influence" )
             elif item.type == ItemType.filler:
                 if item.name == "Gold":
-                    self.waaaghMessenger.run("cm:treasury_mod(\"%s\", 10000)" % (self.playerFaction))
+                    self.waaaghMessenger.run("cm:treasury_mod(\"%s\", 1000)" % (self.playerFaction))
 
         if self.numberOfGoalItems == self.goalNumber:
             asyncio.create_task(self.send_msgs([{"cmd": "StatusUpdate", "status": 30}]))

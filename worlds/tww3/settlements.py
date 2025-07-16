@@ -1045,14 +1045,14 @@ class Settlement_Manager():
         return self.faction_distance_dict[faction_key]
     
     def factions_to_spheres(self, sphere_amount: int, sphere_distance: int):
-        factions_to_spheres = {}
+        self.factions_to_spheres = {}
         for key, value in self.faction_distance_dict.items():
             sphere = int(value/sphere_distance)
             if (sphere <sphere_amount):
-                factions_to_spheres[key] = sphere
+                self.factions_to_spheres[key] = sphere
             else:
-                factions_to_spheres[key] = sphere_amount -1
-        return factions_to_spheres
+                self.factions_to_spheres[key] = sphere_amount -1
+        return self.factions_to_spheres
 
     def table_to_dict(self, table) -> TypedDict:
         settlement_table: Dict[int, SettlementDict] = {}
@@ -1179,18 +1179,19 @@ class Settlement_Manager():
         self.new_horde_dict = {row[0]: row[1] for row in new_horde_table}
         return self.new_settlement_dict, self.new_horde_dict
 
-    # def shuffle_starting_Positions(self, playerFaction):
-    #     if has_home_region(playerFaction):
-    #         new_settlement_dict = shuffle_settlements(player_faction: str, has_home_region)
+    def get_settlement_spheres(self):
+        self.settlement_spheres = {}
+        for settlement, faction in self.new_settlement_dict.items():
+            sphere = self.factions_to_spheres[faction]
+            self.settlement_spheres[settlement] = sphere
+        return self.settlement_spheres
     
-
-# sm = Settlement_Manager(random)
-# table = sm.shuffle_settlements("wh_main_emp_empire")
-# print(table)
-# print(sm.settlement_to_faction('wh3_main_combi_region_the_monolith_of_katam'))
-# print(table['wh3_main_combi_region_the_monolith_of_katam'])
-# print(sm.new_settlement_dict)
-# print(sm.faction_distance_dict)
-# print(sm.get_distance("wh_main_emp_empire"))
-# table = sm.shuffle_settlements("wh_main_emp_empire")
-# print(table)
+    def count_settlements_per_sphere(self, sphere_amount: int):
+        settlements_per_sphere = {}
+        for i in range(sphere_amount):
+            sum = 0
+            for settlement, sphere in self.settlement_spheres.items():
+                if sphere == i:
+                    sum += 1
+            settlements_per_sphere[i] = sum
+        return settlements_per_sphere

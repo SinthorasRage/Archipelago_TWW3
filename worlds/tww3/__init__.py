@@ -10,9 +10,10 @@ from .item_tables.progressive_units_table import progressive_units_table
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
-from worlds.generic.Rules import set_rule
+from worlds.generic.Rules import set_rule, add_rule
 from worlds.LauncherComponents import components, Component, launch_subprocess, Type, icon_paths
 from Utils import local_path
+from BaseClasses import ItemClassification as IC
 
 def launch_client():
     from .TWW3Client import launch
@@ -82,6 +83,24 @@ class TWW3World(World):
         sphere_amount = self.options.spheres_option.value
         sphere_distance = self.options.sphere_distance.value
         self.factions_to_spheres = self.sm.factions_to_spheres(sphere_amount, sphere_distance)
+
+        if self.options.balance_spheres == True:
+            self.item_name_groups = {
+                "Unlocks": set()
+            }
+            for item, value in self.item_table.items():
+                if value.classification == IC.progression and value.faction == self.player_faction:
+                    self.item_name_groups["Unlocks"].add(value.name)
+
+            self.sm.get_settlement_spheres()
+            sphere_amount = self.options.spheres_option.value
+            settlements_per_sphere = self.sm.count_settlements_per_sphere(sphere_amount)
+            unlock_percentage = self.options.balance_spheres_percentage
+            items_per_sphere = {}
+            for i in range(sphere_amount):
+                required_items = int(settlements_per_sphere[i] * unlock_percentage/100)
+                items_per_sphere[i] = required_items
+
         for location_name in location_names:
             loc_id = self.location_name_to_id[location_name]
             location = TWW3Location(self.player, location_name, loc_id, world_region)
@@ -92,11 +111,19 @@ class TWW3World(World):
                 if (not (faction == lord_name_to_faction_dict[self.options.starting_faction])):
                     if ((required_spheres != 0) and (required_spheres < sphere_amount)):
                         set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres))
+                        if (self.options.balance_spheres == True) and (items_per_sphere[required_spheres - 1] != 0):
+                            add_rule(location, lambda state, spheres=required_spheres: state.has_group("Unlocks", self.player, items_per_sphere[spheres - 1]))
                     elif ((required_spheres >= sphere_amount) and (self.options.sphere_world.value)):
-                        set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres - 1))
+                        set_rule(location, lambda state, spheres=sphere_amount: state.has("Sphere of Influence", self.player, spheres - 1))
+                        if (self.options.balance_spheres == True) and (items_per_sphere[sphere_amount - 2] != 0):
+                            add_rule(location, lambda state, spheres=sphere_amount: state.has_group("Unlocks", self.player, items_per_sphere[spheres - 2]))
                     elif ((required_spheres >= sphere_amount) and (not self.options.sphere_world.value)):
                         continue
             world_region.locations.append(location)
+
+       
+
+
 
         # Create events
         goal_event_name = self.options.goal.get_event_name()
