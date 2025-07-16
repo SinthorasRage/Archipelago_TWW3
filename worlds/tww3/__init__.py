@@ -91,6 +91,7 @@ class TWW3World(World):
             for item, value in self.item_table.items():
                 if value.classification == IC.progression and value.faction == self.player_faction:
                     self.item_name_groups["Unlocks"].add(value.name)
+            print(len(self.item_name_groups["Unlocks"]))
 
             self.sm.get_settlement_spheres()
             sphere_amount = self.options.spheres_option.value
@@ -100,7 +101,34 @@ class TWW3World(World):
             for i in range(sphere_amount):
                 required_items = int(settlements_per_sphere[i] * unlock_percentage/100)
                 items_per_sphere[i] = required_items
+            
+            max_items = 0
+            if self.options.building_shuffle:
+                if self.options.progressive_buildings:
+                    for value in set(progressive_buildings_table.values()):
+                        if (value.faction == self.player_faction):
+                            max_items += 1
+                else:
+                    for value in set(unique_item_table.values()):
+                        if ((value.faction == self.player_faction) and (value.type == ItemType.building)):
+                            max_items += 1
+            if self.options.unit_shuffle:
+                if self.options.progressive_units:
+                    for value in set(progressive_units_table.values()):
+                        if (value.faction == self.player_faction):
+                            max_items += 1
+                else:
+                    for value in set(unique_item_table.values()):
+                        if ((value.faction == self.player_faction) and (value.type == ItemType.unit)):
+                            max_items += 1
+            if self.options.tech_shuffle:
+                for value in set(unique_item_table.values()):
+                    if ((value.faction == self.player_faction) and (value.type == ItemType.tech)):
+                        max_items += 1
+            max_unlocks = self.options.balance_spheres_max_unlocks.value
+            print(max_items)
 
+        
         for location_name in location_names:
             loc_id = self.location_name_to_id[location_name]
             location = TWW3Location(self.player, location_name, loc_id, world_region)
@@ -112,11 +140,29 @@ class TWW3World(World):
                     if ((required_spheres != 0) and (required_spheres < sphere_amount)):
                         set_rule(location, lambda state, spheres=required_spheres: state.has("Sphere of Influence", self.player, spheres))
                         if (self.options.balance_spheres == True) and (items_per_sphere[required_spheres - 1] != 0):
-                            add_rule(location, lambda state, spheres=required_spheres: state.has_group("Unlocks", self.player, items_per_sphere[spheres - 1]))
+                            sum = 0
+                            for i in range(0, required_spheres - 1):
+                                sum += items_per_sphere[required_spheres - 1]
+                            if (self.options.balance_spheres_max_unlocks.value != 0):
+                                if (sum > max_unlocks):
+                                    sum = max_unlocks
+                            else:
+                                if (sum > max_items):
+                                    sum = max_items
+                            add_rule(location, lambda state, new_sum=sum: state.has_group("Unlocks", self.player, new_sum))
                     elif ((required_spheres >= sphere_amount) and (self.options.sphere_world.value)):
                         set_rule(location, lambda state, spheres=sphere_amount: state.has("Sphere of Influence", self.player, spheres - 1))
                         if (self.options.balance_spheres == True) and (items_per_sphere[sphere_amount - 2] != 0):
-                            add_rule(location, lambda state, spheres=sphere_amount: state.has_group("Unlocks", self.player, items_per_sphere[spheres - 2]))
+                            sum = 0
+                            for i in range(0, sphere_amount - 2):
+                                sum += items_per_sphere[sphere_amount - 2]
+                            if (self.options.balance_spheres_max_unlocks.value != 0):
+                                if (sum > max_unlocks):
+                                    sum = max_unlocks
+                            else:
+                                if (sum > max_items):
+                                    sum = max_items
+                            add_rule(location, lambda state, new_sum=sum: state.has_group("Unlocks", self.player, new_sum))
                     elif ((required_spheres >= sphere_amount) and (not self.options.sphere_world.value)):
                         continue
             world_region.locations.append(location)

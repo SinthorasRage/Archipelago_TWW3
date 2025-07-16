@@ -157,6 +157,12 @@ class BalanceSpheresPercentage(Range):
     range_end = 100
     default = 50
 
+class BalanceSpheresMaxUnlocks(Range):
+    # The maximum number of unlocks required for the last sphere.
+    range_start = 0
+    range_end = 200
+    default = 50
+
 class Goal(Choice):
     auto_display_name = True
     display_name = "Goal"
@@ -188,6 +194,7 @@ class TWW3Options(PerGameCommonOptions):
     sphere_world: SphereWorld
     balance_spheres: BalanceSpheres
     balance_spheres_percentage: BalanceSpheresPercentage
+    balance_spheres_max_unlocks: BalanceSpheresMaxUnlocks
     goal: Goal
     domination_option: Domination_Amount
 

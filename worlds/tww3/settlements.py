@@ -1176,7 +1176,8 @@ class Settlement_Manager():
             breakout_counter += 1
         horde_keys = self.get_major_horde_faction_ids()
         horde_keys.append(self.get_minor_faction_ids())
-        horde_keys.remove(self.faction_to_faction_id(player_faction))
+        if (not self.has_home_region(player_faction)):
+            horde_keys.remove(self.faction_to_faction_id(player_faction))
         for faction in horde_keys:
             i = self.random.randint(0, len(remaining_horde_settlement_ids) - 1)
             new_horde_table.append([new_settlement_table[i][0], faction])
