@@ -7,6 +7,7 @@ from .item_tables.progression_filler_table import progression_table, filler_tabl
 from .item_tables.unique_item_table import unique_item_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
+from .item_tables.progressive_techs_table import progressive_techs_table
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
@@ -54,6 +55,7 @@ class TWW3World(World):
     item_table.update(unique_item_table)
     item_table.update(progressive_buildings_table)
     item_table.update(progressive_units_table)
+    item_table.update(progressive_techs_table)
     item_name_to_id = {data.name: item_id for item_id, data in item_table.items()}
     # print("Sinthoras Debug:")
     # print(len(item_name_to_id))
@@ -91,7 +93,6 @@ class TWW3World(World):
             for item, value in self.item_table.items():
                 if value.classification == IC.progression and value.faction == self.player_faction:
                     self.item_name_groups["Unlocks"].add(value.name)
-            print(len(self.item_name_groups["Unlocks"]))
 
             self.sm.get_settlement_spheres()
             sphere_amount = self.options.spheres_option.value
@@ -106,27 +107,31 @@ class TWW3World(World):
             if self.options.building_shuffle:
                 if self.options.progressive_buildings:
                     for value in set(progressive_buildings_table.values()):
-                        if (value.faction == self.player_faction):
+                        if ((value.faction == self.player_faction) and (value.tier +1 > self.options.starting_tier.value)):
                             max_items += 1
                 else:
                     for value in set(unique_item_table.values()):
-                        if ((value.faction == self.player_faction) and (value.type == ItemType.building)):
+                        if ((value.faction == self.player_faction) and (value.type == ItemType.building) and (value.tier +1 > self.options.starting_tier.value)):
                             max_items += 1
             if self.options.unit_shuffle:
                 if self.options.progressive_units:
                     for value in set(progressive_units_table.values()):
+                        if ((value.faction == self.player_faction) and (value.tier > self.options.starting_tier.value)):
+                            max_items += 1
+                else:
+                    for value in set(unique_item_table.values()):
+                        if ((value.faction == self.player_faction) and (value.type == ItemType.unit) and (value.tier > self.options.starting_tier.value)):
+                            max_items += 1
+            if self.options.tech_shuffle:
+                if self.options.progressive_technologies:
+                    for value in set(progressive_techs_table.values()):
                         if (value.faction == self.player_faction):
                             max_items += 1
                 else:
                     for value in set(unique_item_table.values()):
-                        if ((value.faction == self.player_faction) and (value.type == ItemType.unit)):
+                        if ((value.faction == self.player_faction) and (value.type == ItemType.tech)):
                             max_items += 1
-            if self.options.tech_shuffle:
-                for value in set(unique_item_table.values()):
-                    if ((value.faction == self.player_faction) and (value.type == ItemType.tech)):
-                        max_items += 1
             max_unlocks = self.options.balance_spheres_max_unlocks.value
-            print(max_items)
 
         
         for location_name in location_names:
@@ -208,11 +213,11 @@ class TWW3World(World):
                             tww3_item = self.create_item(item.name)
                             pool.append(tww3_item)
                             self.item_list.append(item_id)
-                elif ((self.options.tech_shuffle.value == True) and (item.type == ItemType.tech)):
-                    for i in range(item.count):
-                        tww3_item = self.create_item(item.name)
-                        pool.append(tww3_item)
-                        self.item_list.append(item_id)
+                    elif ((self.options.tech_shuffle.value == True) and (item.type == ItemType.tech) and (self.options.progressive_technologies == False)):
+                        for i in range(item.count):
+                            tww3_item = self.create_item(item.name)
+                            pool.append(tww3_item)
+                            self.item_list.append(item_id)
 
         if (self.options.progressive_units == True):
             for item_id, item in progressive_units_table.items():
@@ -223,6 +228,12 @@ class TWW3World(World):
         if (self.options.progressive_buildings == True):
             for item_id, item in progressive_buildings_table.items():
                 if ((item.faction == self.player_faction) and (item.tier +1 > self.options.starting_tier.value) and (self.options.building_shuffle.value == True)):
+                    tww3_item = self.create_item(item.name)
+                    pool.append(tww3_item)
+
+        if (self.options.progressive_technologies == True):
+            for item_id, item in progressive_techs_table.items():
+                if ((item.faction == self.player_faction) and (self.options.tech_shuffle.value == True)):
                     tww3_item = self.create_item(item.name)
                     pool.append(tww3_item)
 
@@ -256,6 +267,7 @@ class TWW3World(World):
         slot_data: Dict = {}
         
         slot_data["PlayerFaction"] = self.options.starting_faction.value
+        slot_data["ProgressiveTechs"] = self.options.progressive_technologies.value
         slot_data["ProgressiveBuildings"] = self.options.progressive_buildings.value
         slot_data["ProgressiveUnits"] = self.options.progressive_units.value
         slot_data["StartingTier"] = self.options.starting_tier.value

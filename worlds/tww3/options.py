@@ -116,6 +116,9 @@ class MaxRange(Range):
 class TechShuffle(Toggle):
     display_name = "TechShuffle"
 
+class ProgressiveTechnologies(DefaultOnToggle):
+    display_name = "Progressive Technologies"
+
 class BuildingShuffle(Toggle):
     display_name = "BuildingShuffle"
 
@@ -184,6 +187,7 @@ class TWW3Options(PerGameCommonOptions):
     faction_shuffle: FactionShuffle
     max_range: MaxRange
     tech_shuffle: TechShuffle
+    progressive_technologies: ProgressiveTechnologies
     building_shuffle: BuildingShuffle
     progressive_buildings: ProgressiveBuildings
     unit_shuffle: UnitShuffle

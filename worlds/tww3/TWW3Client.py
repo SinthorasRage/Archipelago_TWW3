@@ -10,6 +10,7 @@ from .item_tables.progression_filler_table import progression_table, filler_tabl
 from .item_tables.unique_item_table import unique_item_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
+from .item_tables.progressive_techs_table import progressive_techs_table
 from worlds.tww3.locations import location_table
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component
 import io
@@ -71,6 +72,7 @@ class TWW3Context(CommonContext):
         self.item_table.update(unique_item_table)
         self.item_table.update(progressive_buildings_table)
         self.item_table.update(progressive_units_table)
+        self.item_table.update(progressive_techs_table)
         self.progressive_items_flags = {key: 0 for key in self.item_table.keys()}
 
     # def make_gui(self) -> "type[kvui.GameManager]":
@@ -118,6 +120,7 @@ class TWW3Context(CommonContext):
         self.goalNumber = args['slot_data']['DominationGoal']
         self.spheres = args['slot_data']['Spheres']
         self.capitals = args['slot_data']['FactionCapitals']
+        self.progressiveTechs = args['slot_data']['ProgressiveTechs']
         self.progressiveBuildings = args['slot_data']['ProgressiveBuildings']
         self.progressiveUnits = args['slot_data']['ProgressiveUnits']
         self.startingTier = args['slot_data']['StartingTier']
@@ -136,7 +139,10 @@ class TWW3Context(CommonContext):
                 else:
                     self.waaaghMessenger.run("cm:remove_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
             elif item.type == ItemType.tech:
-                self.waaaghMessenger.run("cm:unlock_technology(\"%s\", \"%s\")" % (self.playerFaction, item.name))
+                if (self.progressiveTechs == True):
+                    self.send_next_progressive_tech(item.name)
+                else:
+                    self.waaaghMessenger.run("cm:unlock_technology(\"%s\", \"%s\")" % (self.playerFaction, item.name))
             elif item.type == ItemType.unit:
                 if (self.progressiveUnits == True):
                     self.send_next_progressive_units(item.name)
@@ -175,6 +181,17 @@ class TWW3Context(CommonContext):
         for id, item in self.item_table.items():
             if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup) and (item.tier == level_to_unlock)):
                 self.waaaghMessenger.run("cm:remove_event_restricted_unit_record_for_faction(\"%s\", \"%s\")" % (item.name, self.playerFaction))
+
+    def send_next_progressive_tech(self, progressionGroup):
+    # The Amount of progressive Items per Group is saved on the first index with that progression Group
+        for id, item in self.item_table.items():
+            if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup)):
+                level_to_unlock = self.progressive_items_flags[id]
+                self.progressive_items_flags[id] += 1
+                break
+        for id, item in self.item_table.items():
+            if ((item.faction == self.playerFaction) and (item.progressionGroup == progressionGroup) and (item.tier == level_to_unlock)):
+                self.waaaghMessenger.run("cm:unlock_technology(\"%s\", \"%s\")" % (self.playerFaction, item.name))
 
     def triggerProgressionEvents(self, numberOfSphereItems):
         oldSphere = []
@@ -238,6 +255,7 @@ class EngineInitializer():
         waaaghMessenger = context.waaaghMessenger
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
+            waaaghMessenger.run("cm:heal_garrison(cm:get_region(\"%s\"):cqi())" % (settlement))
         for faction, settlement in capitals.items():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
@@ -246,7 +264,7 @@ class EngineInitializer():
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for itemNumber in randitem_list:
             itemData = context.item_table[itemNumber]
-            if itemData.type == ItemType.tech:
+            if ((itemData.type == ItemType.tech) and (context.progressiveTechs == False) and (itemData.progressionGroup != None)):
                 waaaghMessenger.run("cm:lock_one_technology_node(\"%s\", \"%s\")" % (playerFaction, itemData.name))
             elif ((itemData.type == ItemType.building) and (context.progressiveBuildings == False) and (itemData.progressionGroup != None)):
                 waaaghMessenger.run("cm:add_event_restricted_building_record_for_faction(\"%s\", \"%s\")" % (itemData.name, playerFaction))
@@ -256,6 +274,8 @@ class EngineInitializer():
             cls.lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger, context.item_table, context.progressive_items_flags)
         if (context.progressiveUnits == True):
             cls.lock_progressive_units(playerFaction, startingTier, waaaghMessenger, context.item_table, context.progressive_items_flags)
+        if (context.progressiveTechs == True):
+            cls.lock_progressive_techs(playerFaction, waaaghMessenger, context.item_table, context.progressive_items_flags)
         sphereZeroFactions = []
         sphereAllOthers = []
         for faction, sphere in spheres.items():
@@ -269,6 +289,12 @@ class EngineInitializer():
                 waaaghMessenger.run("cm:force_make_peace(\"%s\", \"%s\")" % (factionZero, faction))
                 waaaghMessenger.run("cm:force_diplomacy(\"faction:%s\", \"faction:%s\", \"all\", false, false, true)" % (factionZero, faction))
         waaaghMessenger.flush()
+
+    def lock_progressive_techs(playerFaction, waaaghMessenger, item_table, progressive_items_flags):
+        for id, item in item_table.items():
+            if ((item.faction == playerFaction) and (item.type == ItemType.tech) and (item.progressionGroup != None)):
+                # The Amount of progressive Items per Group is saved on the first index with that progression Group, but since we don't know the first item of each progression Group, we set all items to the starting Tier for now.
+                waaaghMessenger.run("cm:lock_one_technology_node(\"%s\", \"%s\")" % (playerFaction, item.name))
 
     def lock_progressive_buildings(playerFaction, startingTier, waaaghMessenger, item_table, progressive_items_flags):
         for id, item in item_table.items():
