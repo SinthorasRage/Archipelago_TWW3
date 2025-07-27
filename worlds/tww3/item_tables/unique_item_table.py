@@ -3,9 +3,6 @@ from BaseClasses import ItemClassification as IC
 from typing import NamedTuple, Dict, Set, List
 
 unique_item_table: Dict[int, ItemData] = {
-    1000: ItemData(IC.progression, 0, "Orb of Domination", ItemType.goal, "None", None, "None"),
-    1100: ItemData(IC.progression, 0, "Sphere of Influence", ItemType.progression, "None", None, "None"),
-    2000: ItemData(IC.filler, 0, "Gold", ItemType.filler, "None", None, "None"),
     10000: ItemData(IC.progression, 1, "wh3_dlc20_chs_cav_marauder_horsemen_msla_javelins", ItemType.unit, "wh3_main_dae_daemon_prince", 2, "Progressive chs_cav"),
     10001: ItemData(IC.progression, 1, "wh3_dlc20_chs_inf_chaos_marauders_mkho_dualweapons", ItemType.unit, "wh3_main_dae_daemon_prince", 2, "Progressive chs_inf"),
     10002: ItemData(IC.progression, 1, "wh3_dlc20_chs_inf_chaos_marauders_mnur", ItemType.unit, "wh3_main_dae_daemon_prince", 1, "Progressive chs_inf"),

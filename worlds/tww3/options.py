@@ -181,6 +181,37 @@ class Domination_Amount(Range):
     range_end = 100
     default = 20
 
+class filler_weak(Range):
+    range_start = 1
+    range_end = 100
+    default = 20
+
+class filler_strong(Range):
+    range_start = 1
+    range_end = 100
+    default = 0
+
+class trap_harmless(Range):
+    range_start = 1
+    range_end = 100
+    default = 0
+
+class trap_weak(Range):
+    range_start = 1
+    range_end = 100
+    default = 0
+
+class trap_strong(Range):
+    range_start = 1
+    range_end = 100
+    default = 0
+
+class RandomizePersonalities(Toggle):
+    display_name = "Randomize Personality of each AI faction"
+
+class RandomizeShownPredictedWin(Toggle):
+    display_name = "Randomize only the shown predicted win chance in the pre battle screen. Only visual, no effect on autoresolve result"
+
 @dataclass
 class TWW3Options(PerGameCommonOptions):
     starting_faction: Faction
@@ -201,4 +232,10 @@ class TWW3Options(PerGameCommonOptions):
     balance_spheres_max_unlocks: BalanceSpheresMaxUnlocks
     goal: Goal
     domination_option: Domination_Amount
-
+    filler_weak: filler_weak
+    filler_strong: filler_strong
+    trap_harmless: trap_harmless
+    trap_weak: trap_weak
+    trap_strong: trap_strong
+    RandomizePersonalities: RandomizePersonalities
+    RandomizeShownPredictedWin: RandomizeShownPredictedWin

@@ -3,11 +3,15 @@ from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 from .options import TWW3Options  # the options we defined earlier
 from .item_tables.items import ItemType
-from .item_tables.progression_filler_table import progression_table, filler_table
+from .item_tables.progression_table import progression_table
+from .item_tables.filler_item_table import filler_weak_table, filler_strong_table, trap_harmless_table, trap_weak_table, trap_strong_table
+from .item_tables.effect_table import faction_effect_table
+from .item_tables.ancillaries_table import ancillaries_regular_table, ancillaries_legendary_table
 from .item_tables.unique_item_table import unique_item_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
 from .item_tables.progressive_techs_table import progressive_techs_table
+from .filler_item_manager import Filler_Item_Manager
 from .locations import location_table  # same as above
 from .settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
@@ -51,7 +55,14 @@ class TWW3World(World):
     origin_region_name = "Old World"
     topology_present = False # show path to required location checks in spoiler
     item_table = dict(progression_table)
-    item_table.update(filler_table)
+    item_table.update(filler_weak_table)
+    item_table.update(filler_strong_table)
+    item_table.update(faction_effect_table)
+    item_table.update(ancillaries_regular_table)
+    item_table.update(ancillaries_legendary_table)
+    item_table.update(trap_harmless_table)
+    item_table.update(trap_weak_table)
+    item_table.update(trap_strong_table)
     item_table.update(unique_item_table)
     item_table.update(progressive_buildings_table)
     item_table.update(progressive_units_table)
@@ -66,8 +77,8 @@ class TWW3World(World):
     factions_to_spheres = {}
     item_list = []
 
-    def get_filler_item_name(self) -> str:
-        return "Gold"
+    # def get_filler_item_name(self) -> str:
+    #     return "Gold"
 
     def generate_early(self):
         #self.player_faction = self.options.starting_faction.value
@@ -248,9 +259,12 @@ class TWW3World(World):
         item_amount: int = len(pool)
         location_amount: int = len(all_locations)
 
+        item_manager = Filler_Item_Manager(self.options.filler_weak.value, self.options.filler_strong.value, self.options.trap_harmless.value, self.options.trap_weak.value, self.options.trap_strong.value, self.random)
         for _ in range(location_amount - item_amount):
-            item = self.create_filler()
-            item = cast(TWW3Item, item)
+            #item = self.create_filler()
+            #item = cast(TWW3Item, item)
+            item_name = item_manager.roll_for_item()
+            item = self.create_item(item_name)
             pool.append(item)
 
         self.multiworld.itempool += pool
@@ -272,6 +286,8 @@ class TWW3World(World):
         slot_data["ProgressiveUnits"] = self.options.progressive_units.value
         slot_data["StartingTier"] = self.options.starting_tier.value
         slot_data["DominationGoal"] = self.options.domination_option.value
+        slot_data["RandomizePersonalities"] = self.options.RandomizePersonalities.value
+        slot_data["RandomizePredictedWin"] = self.options.RandomizeShownPredictedWin.value
         slot_data["Settlements"] = self.settlement_table
         slot_data["Hordes"] = self.horde_table
         slot_data["Spheres"] = self.factions_to_spheres

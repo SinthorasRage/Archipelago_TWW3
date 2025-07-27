@@ -6,11 +6,15 @@ import logging
 import copy
 from worlds.tww3.settlements import lord_name_to_faction_dict
 from .item_tables.items import ItemType
-from .item_tables.progression_filler_table import progression_table, filler_table
+from .item_tables.progression_table import progression_table
+from .item_tables.filler_item_table import filler_weak_table, filler_strong_table, trap_harmless_table, trap_weak_table, trap_strong_table
+from .item_tables.effect_table import faction_effect_table
+from .item_tables.ancillaries_table import ancillaries_regular_table, ancillaries_legendary_table
 from .item_tables.unique_item_table import unique_item_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
 from .item_tables.progressive_techs_table import progressive_techs_table
+from .filler_item_manager import Filler_Item_Manager
 from worlds.tww3.locations import location_table
 from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component
 import io
@@ -68,7 +72,14 @@ class TWW3Context(CommonContext):
         self.numberOfGoalItems = 0
         self.numberOfSphereItems = 0
         self.item_table = dict(progression_table)
-        self.item_table.update(filler_table)
+        self.item_table.update(filler_weak_table)
+        self.item_table.update(filler_strong_table)
+        self.item_table.update(faction_effect_table)
+        self.item_table.update(ancillaries_regular_table)
+        self.item_table.update(ancillaries_legendary_table)
+        self.item_table.update(trap_harmless_table)
+        self.item_table.update(trap_weak_table)
+        self.item_table.update(trap_strong_table)
         self.item_table.update(unique_item_table)
         self.item_table.update(progressive_buildings_table)
         self.item_table.update(progressive_units_table)
@@ -124,6 +135,8 @@ class TWW3Context(CommonContext):
         self.progressiveBuildings = args['slot_data']['ProgressiveBuildings']
         self.progressiveUnits = args['slot_data']['ProgressiveUnits']
         self.startingTier = args['slot_data']['StartingTier']
+        self.randomizePersonalities = args['slot_data']['RandomizePersonalities']
+        self.randomizePredictedWin = args['slot_data']['RandomizePredictedWin']
         #EngineInitializer.initialize(self.settlements, self.randitemList, self.playerFaction, self.spheres, self.capitals, self.waaaghMessenger)
         EngineInitializer.initialize(self)
 
@@ -155,9 +168,43 @@ class TWW3Context(CommonContext):
                 self.numberOfSphereItems = self.numberOfSphereItems + 1
                 self.triggerProgressionEvents(self.numberOfSphereItems)
                 logger.info("You now have: " + str(self.numberOfSphereItems) + " Spheres of Influence" )
-            elif item.type == ItemType.filler:
-                if item.name == "Gold":
-                    self.waaaghMessenger.run("cm:treasury_mod(\"%s\", 1000)" % (self.playerFaction))
+            elif item.type == ItemType.filler_weak:
+                if item.name == "Get-Rich-Quick Scroll":
+                    self.waaaghMessenger.run("cm:treasury_mod(\"%s\", %d)" % (self.playerFaction, cm:random_number(1,10000)))
+                elif item.name == "Handfull of Order" :
+                    self.waaaghMessenger.run("set_random_positive_public_order()")
+                elif item.name == "The GroBro 3000™":
+                    self.waaaghMessenger.run("add_random_growth_to_player()")
+            elif (item.type == ItemType.ancillaries_regular) or item.(type == ItemType.ancillaries_legendary):
+                self.waaaghMessenger.run("give_player_ancillary(\"%s\")" % (item.name))
+            elif item.type == ItemType.effect_faction:
+                self.waaaghMessenger.run("give_player_faction_effect(\"%s\")" % (item.name))
+            elif item.type == ItemType.filler_strong:
+                if item.name == "Give me that":
+                    self.waaaghMessenger.run("force_enemy_settlement_transfer()")
+                elif item.name == "Make Love, Not War":
+                    self.waaaghMessenger.run("force_alliance_with_random_enemy()")
+            elif item.type == ItemType.trap_harmless:
+                if item.name == "Look! What\'s that?":
+                    self.waaaghMessenger.run("scroll_camera_to_random_region()")
+                if item.name == "Spoiler Alert!":
+                    self.waaaghMessenger.run("play_random_movie()")
+            elif item.type == ItemType.trap_weak:
+                if item.name == "Handfull of Unrest":
+                    self.waaaghMessenger.run("set_random_negative_public_order()")
+                elif item.name == "Unionize This!":
+                    self.waaaghMessenger.run("force_random_weak_rebellion_for_player()")
+                elif item.name == "Where is our Map?":
+                    self.waaaghMessenger.run("cm:reset_shroud()")
+                elif item.name == "Schizophrenia!":
+                    self.waaaghMessenger.run("cm:cai_force_personality_change(\"All\")")
+            elif item.type == ItemType.trap_strong:
+                if item.name == "Torches and Pitchforks!":
+                    self.waaaghMessenger.run("force_random_strong_rebellion_for_player()")
+                elif item.name == "Let\'s trade!":
+                    self.waaaghMessenger.run("force_settlement_trade_with_random_enemy()")
+                elif item.name == "You too, Brutus?":
+                    self.waaaghMessenger.run("force_war_with_random_ally()")
 
         if self.numberOfGoalItems == self.goalNumber:
             asyncio.create_task(self.send_msgs([{"cmd": "StatusUpdate", "status": 30}]))
@@ -253,6 +300,10 @@ class EngineInitializer():
         capitals = context.capitals
         startingTier = context.startingTier
         waaaghMessenger = context.waaaghMessenger
+        if (context.randomizePersonalities == True):
+            waaaghMessenger.run("cm:cai_force_personality_change(\"All\")")
+        if (context.randomizePredictedWin == True):
+            waaaghMessenger.run("start_random_predict_win_listener()")
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
             waaaghMessenger.run("cm:heal_garrison(cm:get_region(\"%s\"):cqi())" % (settlement))
