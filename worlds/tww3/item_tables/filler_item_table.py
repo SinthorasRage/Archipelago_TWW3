@@ -29,7 +29,7 @@ trap_weak_table: Dict[int, ItemData] = {
 }
 
 trap_strong_table: Dict[int, ItemData] = {
-    3200: ItemData(IC.trap, 0, "Torches and Pitchforks", ItemType.trap_strong, "None", None, "None"),
+    3200: ItemData(IC.trap, 0, "Torches and Pitchforks!", ItemType.trap_strong, "None", None, "None"),
     3205: ItemData(IC.trap, 0, "Let's trade!", ItemType.trap_strong, "None", None, "None"),
     3206: ItemData(IC.trap, 0, "You too, Brutus?", ItemType.trap_strong, "None", None, "None")
 }

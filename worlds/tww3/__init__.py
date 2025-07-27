@@ -5,9 +5,10 @@ from .options import TWW3Options  # the options we defined earlier
 from .item_tables.items import ItemType
 from .item_tables.progression_table import progression_table
 from .item_tables.filler_item_table import filler_weak_table, filler_strong_table, trap_harmless_table, trap_weak_table, trap_strong_table
-from .item_tables.effect_table import faction_effect_table
+from .item_tables.effect_table import global_effect_table
 from .item_tables.ancillaries_table import ancillaries_regular_table, ancillaries_legendary_table
 from .item_tables.unique_item_table import unique_item_table
+from .item_tables.ritual_table import ritual_table
 from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
 from .item_tables.progressive_techs_table import progressive_techs_table
@@ -57,7 +58,7 @@ class TWW3World(World):
     item_table = dict(progression_table)
     item_table.update(filler_weak_table)
     item_table.update(filler_strong_table)
-    item_table.update(faction_effect_table)
+    item_table.update(global_effect_table)
     item_table.update(ancillaries_regular_table)
     item_table.update(ancillaries_legendary_table)
     item_table.update(trap_harmless_table)
@@ -67,6 +68,7 @@ class TWW3World(World):
     item_table.update(progressive_buildings_table)
     item_table.update(progressive_units_table)
     item_table.update(progressive_techs_table)
+    item_table.update(ritual_table)
     item_name_to_id = {data.name: item_id for item_id, data in item_table.items()}
     # print("Sinthoras Debug:")
     # print(len(item_name_to_id))
@@ -248,6 +250,12 @@ class TWW3World(World):
                     tww3_item = self.create_item(item.name)
                     pool.append(tww3_item)
 
+        if (self.options.ritual_shuffle == True):
+            for item_id, item in ritual_table.items():
+                if (item.faction == self.player_faction):
+                    tww3_item = self.create_item(item.name)
+                    pool.append(tww3_item)
+
         for _ in range(self.options.domination_option.value):
             tww3_item = self.create_item("Orb of Domination")
             pool.append(tww3_item)
@@ -287,7 +295,7 @@ class TWW3World(World):
         slot_data["StartingTier"] = self.options.starting_tier.value
         slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["RandomizePersonalities"] = self.options.RandomizePersonalities.value
-        slot_data["RandomizePredictedWin"] = self.options.RandomizeShownPredictedWin.value
+        slot_data["Ritual_Shuffle"] = self.options.ritual_shuffle.value
         slot_data["Settlements"] = self.settlement_table
         slot_data["Hordes"] = self.horde_table
         slot_data["Spheres"] = self.factions_to_spheres

@@ -1,6 +1,6 @@
 from .item_tables.items import ItemType, ItemData
 from .item_tables.filler_item_table import filler_weak_table, filler_strong_table, trap_harmless_table, trap_weak_table, trap_strong_table
-from .item_tables.effect_table import faction_effect_table
+from .item_tables.effect_table import global_effect_table
 from .item_tables.ancillaries_table import ancillaries_regular_table, ancillaries_legendary_table
 from BaseClasses import ItemClassification as IC
 from typing import NamedTuple, Dict, Set, List
@@ -39,7 +39,7 @@ class Filler_Item_Manager:
         key = self.random.choice(tuple(item_table.keys()))
         # apply random effect
         if key == 2001:
-            effect_table = faction_effect_table
+            effect_table = global_effect_table
             name = self.random.choice(tuple(effect_table.values())).name
             return name
         # get random ancillary

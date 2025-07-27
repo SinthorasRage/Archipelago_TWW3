@@ -20,6 +20,7 @@ class ItemType(IntEnum):
     effect_region = 15
     ancillaries_regular = 16
     ancillaries_legendary = 17
+    ritual = 18
 
 
 

@@ -2,6 +2,7 @@ from Options import Choice, DeathLink, DefaultOnToggle, Range, StartInventoryPoo
 from dataclasses import dataclass
 
 class Faction(Choice):
+    """Choose your Player Faction. In case you pick multiple factions, the Client will tell you after connecting which one you play."""
     display_name = "Player Faction"
     option_beastmen = 1
     option_morghur_herd = 2
@@ -105,68 +106,89 @@ class Faction(Choice):
     default = 14
 
 class FactionShuffle(DefaultOnToggle):
+    """If you want to shuffle the settlements for each faction"""
     display_name = "FactionShuffle"
 
 class MaxRange(Range):
-    # How far away a Settlement can be from a factions other settlements.
+    """How far away a Settlement can be from a factions other settlements.
+    The minimal distance between two settlements is around 23 units, the maximum distance is about 1500 units"""
     range_start = 50
     range_end = 1500
     default = 200
 
 class TechShuffle(Toggle):
+    """If Technologies should be shuffled."""
     display_name = "TechShuffle"
 
 class ProgressiveTechnologies(DefaultOnToggle):
+    """If Technologies should be progressive. Requires TechShuffle to be on."""
     display_name = "Progressive Technologies"
 
 class BuildingShuffle(Toggle):
+    """If Buildings should be shuffled."""
     display_name = "BuildingShuffle"
 
 class ProgressiveBuildings(DefaultOnToggle):
+    """If Buildings should be progressive. Requires BuildingShuffle to be on."""
     display_name = "Progressive Buildings"
 
 class UnitShuffle(Toggle):
+    """If Units should be shuffled."""
     display_name = "UnitShuffle"
 
 class ProgressiveUnits(DefaultOnToggle):
+    """If Units should be progressive. Requires UnitShuffle to be on."""
     display_name = "Progressive Units"
 
+class RitualShuffle(Toggle):
+    """Should Faction Mechanics like Rituals be shuffled? Will make game probably harder. Also experimental Feature."""
+    display_name ="Shuffle Faction Mechanics like Rituals"
+
 class StartingTier(Range):
-    # Min Range between Settlements is 24. Max Range is 1300.
+    """Start with Buildings and Units with the specified Tier."""
     range_start = 0
     range_end = 5
     default = 1
 
 class Spheres(Range):
+    """How many diplomatic Spheres are in the game. You can only engage in Diplomacy with factions that are in your sphere.
+    Collect Spheres of Influence to expand your Sphere."""
     range_start = 1
     range_end = 65
     default = 7
 
 class SphereDistance(Range):
+    """Distance of each Sphere."""
     # Min Range between Settlements is 24. Max Range is 1300.
     range_start = 20
     range_end = 500
     default = 300
 
 class SphereWorld(Toggle):
+    """Should Settlements outside last Sphere be included in the last Sphere? 
+    Can make the game considerably longer, since all Settlements will be in the game."""
     display_name = "Should Settlements outside last Sphere be included in last Sphere"
 
-class BalanceSpheres(Toggle):
+class BalanceSpheres(DefaultOnToggle):
+    """Set's requirements for spheres so that Unit, Building and Tech Unlocks are pushed towards earlier spheres.
+    Will make the unlocks appear smoother over the game instead of most of them at the end."""
     display_name = "Should Unlocks be requirements for the next sphere"
 
 class BalanceSpheresPercentage(Range):
-    # How many percantage of checks in per sphere needs to be at least unlocks.
+    """How many percantage of checks in per sphere needs to be at least unlocks."""
     range_start = 1
     range_end = 100
     default = 50
 
 class BalanceSpheresMaxUnlocks(Range):
-    # The maximum number of unlocks required for the last sphere.
+    """The maximum number of unlocks required for the last sphere.
+    Was an option to workaround a bug, but the bug is fixed. Use it if you want, otherwise just let it disabled."""
     range_start = 0
     range_end = 200
-    default = 50
+    default = 0
 
 class Goal(Choice):
+    """Collect a number of Orb of Dominance Items to win your World."""
     auto_display_name = True
     display_name = "Goal"
     option_domination = 0
@@ -177,40 +199,53 @@ class Goal(Choice):
         }[self.value]
 
 class Domination_Amount(Range):
+    """How many Orb of Dominance Items are in your World."""
     range_start = 1
     range_end = 100
     default = 20
 
 class filler_weak(Range):
+    """Weight of weak filler items.
+    Example: filler_weak: 30, filler_strong: 10, trap_harmless: 30, trap_weak: 25, trap_strong: 5
+    Would mean, that approximatelly 30% are weak filler, 10% are strong filler, etc, since the weights add up to 100.
+    You can deviate from that, but it will be less intuitive if the total number of weights is not 100."""
     range_start = 1
     range_end = 100
-    default = 20
+    default = 30
 
 class filler_strong(Range):
+    """Weight of strong filler items.
+    Experimental Feature."""
     range_start = 1
     range_end = 100
     default = 0
 
 class trap_harmless(Range):
+    """Weight of harmless traps.
+    Experimental Feature."""
     range_start = 1
     range_end = 100
     default = 0
 
 class trap_weak(Range):
+    """Weight of weak traps.
+    Be careful, collecting a vast amount of them may require you to start a new save.
+    Experimental Feature."""
     range_start = 1
     range_end = 100
     default = 0
 
 class trap_strong(Range):
+    """Weight of weak traps.
+    Be careful, collecting a medium amount of them may require you to start a new save.
+    Experimental Feature."""
     range_start = 1
     range_end = 100
     default = 0
 
 class RandomizePersonalities(Toggle):
+    """Randomize AI Personalities."""
     display_name = "Randomize Personality of each AI faction"
-
-class RandomizeShownPredictedWin(Toggle):
-    display_name = "Randomize only the shown predicted win chance in the pre battle screen. Only visual, no effect on autoresolve result"
 
 @dataclass
 class TWW3Options(PerGameCommonOptions):
@@ -238,4 +273,4 @@ class TWW3Options(PerGameCommonOptions):
     trap_weak: trap_weak
     trap_strong: trap_strong
     RandomizePersonalities: RandomizePersonalities
-    RandomizeShownPredictedWin: RandomizeShownPredictedWin
+    ritual_shuffle: RitualShuffle
