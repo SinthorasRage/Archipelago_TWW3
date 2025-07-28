@@ -2,7 +2,8 @@ from Options import Choice, DeathLink, DefaultOnToggle, Range, StartInventoryPoo
 from dataclasses import dataclass
 
 class Faction(Choice):
-    """Choose your Player Faction. In case you pick multiple factions, the Client will tell you after connecting which one you play."""
+    """Choose your Player Faction. In case you pick multiple factions, the Client will tell you after connecting which one you play.
+    Don't forget to remove the weight from the first entry."""
     display_name = "Player Faction"
     option_beastmen = 1
     option_morghur_herd = 2
@@ -103,7 +104,7 @@ class Faction(Choice):
     option_seducers_of_slaanesh = 97
     option_oracles_of_tzeentch = 98
     option_caravan_of_blue_roses = 99
-    default = 14
+    default = 1
 
 class FactionShuffle(DefaultOnToggle):
     """If you want to shuffle the settlements for each faction"""
@@ -209,21 +210,21 @@ class filler_weak(Range):
     Example: filler_weak: 30, filler_strong: 10, trap_harmless: 30, trap_weak: 25, trap_strong: 5
     Would mean, that approximatelly 30% are weak filler, 10% are strong filler, etc, since the weights add up to 100.
     You can deviate from that, but it will be less intuitive if the total number of weights is not 100."""
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 30
 
 class filler_strong(Range):
     """Weight of strong filler items.
     Experimental Feature."""
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 0
 
 class trap_harmless(Range):
     """Weight of harmless traps.
     Experimental Feature."""
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 0
 
@@ -231,7 +232,7 @@ class trap_weak(Range):
     """Weight of weak traps.
     Be careful, collecting a vast amount of them may require you to start a new save.
     Experimental Feature."""
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 0
 
@@ -239,7 +240,7 @@ class trap_strong(Range):
     """Weight of weak traps.
     Be careful, collecting a medium amount of them may require you to start a new save.
     Experimental Feature."""
-    range_start = 1
+    range_start = 0
     range_end = 100
     default = 0
 
