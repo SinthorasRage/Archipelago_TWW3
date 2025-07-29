@@ -3,8 +3,7 @@ import Utils
 import asyncio
 import colorama
 import logging
-import copy
-from worlds.tww3.settlements import lord_name_to_faction_dict
+from .locations_table.settlements import lord_name_to_faction_dict
 from .item_tables.items import ItemType
 from .item_tables.progression_table import progression_table
 from .item_tables.filler_item_table import filler_weak_table, filler_strong_table, trap_harmless_table, trap_weak_table, trap_strong_table
@@ -16,9 +15,9 @@ from .item_tables.progressive_units_table import progressive_units_table
 from .item_tables.ritual_table import ritual_table
 from .item_tables.progressive_techs_table import progressive_techs_table
 from .filler_item_manager import Filler_Item_Manager
-from worlds.tww3.locations import location_table
-from worlds.LauncherComponents import Component, SuffixIdentifier, Type, components, launch as launch_component
-import io
+from .locations_table.locations import location_table
+from . import TWW3World
+from worlds.LauncherComponents import launch as launch_component
 import os
 
 path = "."
@@ -82,9 +81,6 @@ class TWW3Context(CommonContext):
     def __init__(self, server_address, password):
         super().__init__(server_address, password)
         self.initialized = False
-        self.path = None
-        self.numberOfGoalItems = 0
-        self.numberOfSphereItems = 0
         self.item_table = dict(progression_table)
         self.item_table.update(filler_weak_table)
         self.item_table.update(filler_strong_table)
@@ -101,28 +97,11 @@ class TWW3Context(CommonContext):
         self.item_table.update(ritual_table)
         self.progressive_items_flags = {key: 0 for key in self.item_table.keys()}
 
-    # def make_gui(self) -> "type[kvui.GameManager]":
-    #     """
-    #     To return the Kivy `App` class needed for `run_gui` so it can be overridden before being built
-
-    #     Common changes are changing `base_title` to update the window title of the client and
-    #     updating `logging_pairs` to automatically make new tabs that can be filled with their respective logger.
-
-    #     ex. `logging_pairs.append(("Foo", "Bar"))`
-    #     will add a "Bar" tab which follows the logger returned from `logging.getLogger("Foo")`
-    #     """
-    #     from kvui import GameManager
-
-    #     class TextManager(GameManager):
-    #         base_title = "TWW3 Client"
-
-    #     return TextManager
-
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
             await super(TWW3Context, self).server_auth(password_requested)
         await self.get_username()
-        await self.get_path()
+#        await self.get_path()
         await self.send_connect()
 
     def on_package(self, cmd: str, args: dict):
@@ -131,7 +110,14 @@ class TWW3Context(CommonContext):
         elif cmd == "ReceivedItems":
             self.on_received_items(args)
 
-    def on_connected(self, args: dict): 
+    def on_connected(self, args: dict):
+        self.path = TWW3World.settings.tww3_path
+        if not self.path or not os.path.exists(self.path):
+            logger.error('Path does not point to a directory. Please remove Path from host.yaml. If you need help, ask in the Discord channel.')
+        if not os.path.isfile(self.path + '\\Warhammer3.exe'):
+            logger.error('No TWW3 exe in Path. Please remove Path from host.yaml. If you need help, ask in the Discord channel.')
+        self.numberOfGoalItems = 0
+        self.numberOfSphereItems = 0
         self.waaaghWatcher = WaaaghWatcher(self.path + '\\engine.out', self)
         waaaghWatcher_task = asyncio.create_task(self.waaaghWatcher.watch(), name='WaaaghWatcher')
         self.waaaghMessenger = WaaaghMessenger(self.path + '\\engine.in')
@@ -289,17 +275,17 @@ class TWW3Context(CommonContext):
     async def check(self, location):
         await self.check_locations([self.locationLookup[location]])
 
-    async def get_path(self):
-        if not self.path:
-            logger.info('Enter TWW3 Installation path:')
-            self.path = await self.console_input()
-            logger.info('Accepted Path is: ' + self.path)
-            if not path or not os.path.exists(self.path):
-                logger.error('Path does not point to a directory')
-            if not os.path.isfile(self.path + '\\Warhammer3.exe'):
-                logger.error('No TWW3 exe in Path')
-            else:
-                logger.info('Found TWW3 exe')
+    # async def get_path(self):
+    #     if not self.path:
+    #         logger.info('Enter TWW3 Installation path:')
+    #         self.path = await self.console_input()
+    #         logger.info('Accepted Path is: ' + self.path)
+    #         if not path or not os.path.exists(self.path):
+    #             logger.error('Path does not point to a directory')
+    #         if not os.path.isfile(self.path + '\\Warhammer3.exe'):
+    #             logger.error('No TWW3 exe in Path')
+    #         else:
+    #             logger.info('Found TWW3 exe')
 
     def run_gui(self):
         from kvui import GameManager

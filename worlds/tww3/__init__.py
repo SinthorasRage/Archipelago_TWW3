@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, cast, Mapping
+from typing import List, Dict, Any, cast, Mapping, ClassVar
 from worlds.AutoWorld import World, WebWorld
 from BaseClasses import Region, Location, Entrance, Item, ItemClassification
 from .options import TWW3Options  # the options we defined earlier
@@ -13,13 +13,15 @@ from .item_tables.progressive_buildings_table import progressive_buildings_table
 from .item_tables.progressive_units_table import progressive_units_table
 from .item_tables.progressive_techs_table import progressive_techs_table
 from .filler_item_manager import Filler_Item_Manager
-from .locations import location_table  # same as above
-from .settlements import Settlement_Manager, lord_name_to_faction_dict
+from .locations_table.locations import location_table, events  # same as above
+from .locations_table.settlements import Settlement_Manager, lord_name_to_faction_dict
 from .rules import set_rules
 from worlds.generic.Rules import set_rule, add_rule
 from worlds.LauncherComponents import components, Component, launch_subprocess, Type, icon_paths
 from Utils import local_path
 from BaseClasses import ItemClassification as IC
+import os
+import settings
 
 def launch_client():
     from .TWW3Client import launch
@@ -39,8 +41,19 @@ components.append(Component("TWW3 Client",
 class TWW3Item(Item):  # or from Items import MyGameItem
     game = "Total War Warhammer 3"  # name of the game/world this item is from
 
-# class TWW3Settings(settings.Group):
-#     pass
+class TWW3Settings(settings.Group):
+    class TWW3Path(settings.FolderPath):
+        """Installation Path to the TWW3 folder, so that input and output files can be written."""
+        description = "Total War Warhammer 3 Installation Folder. Where the .exe is."
+
+        # def validate(cls, path: str):
+        #     if not path or not os.path.exists(path):
+        #         raise ValueError('Path does not point to a directory')
+        #     if not os.path.isfile(path + '\\Warhammer3.exe'):
+        #         raise ValueError('No TWW3 exe in Path')
+
+
+    tww3_path: TWW3Path = TWW3Path("C:/Program Files (x86)/Steam/steamapps/common/Total War WARHAMMER III")
 
 class TWW3Location(Location):  # or from Locations import MyGameLocation
     game = "Total War Warhammer 3"  # name of the game/world this location is in
@@ -52,7 +65,7 @@ class TWW3World(World):
     game = "Total War Warhammer 3"  # name of the game/world
     options_dataclass = TWW3Options  # options the player can set
     options: TWW3Options  # typing hints for option results
-    # settings: ClassVar[TWW3Settings]  # will be automatically assigned from type hint
+    settings: ClassVar[TWW3Settings]  # will be automatically assigned from type hint
     origin_region_name = "Old World"
     topology_present = False # show path to required location checks in spoiler
     item_table = dict(progression_table)
@@ -192,7 +205,7 @@ class TWW3World(World):
         # Create events
         goal_event_name = self.options.goal.get_event_name()
 
-        for event in locations.events:
+        for event in events:
             location = TWW3Location(self.player, event, None, world_region)
             world_region.locations.append(location)
             location.place_locked_item(

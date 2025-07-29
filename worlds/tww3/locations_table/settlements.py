@@ -1,4 +1,5 @@
 from typing import TypedDict, NamedTuple
+from .forest_locations import forest_location_table
 import math
 
 lord_name_to_faction_dict = {
@@ -396,6 +397,18 @@ faction_table = [
     ["wh2_dlc11_cst_rogue_terrors_of_the_dark_straights", False, False],
     ["wh2_dlc11_cst_rogue_the_churning_gulf_raiders", False, False],
     ["wh2_dlc11_cst_rogue_tyrants_of_the_black_ocean", False, False]
+]
+
+woodelve_table = [
+    ["wh_dlc05_wef_wood_elves", True, True],
+    ["wh_dlc05_wef_argwylon", True, True],
+    ["wh2_dlc16_wef_sisters_of_twilight", True, True],
+    ["wh2_dlc16_wef_drycha", True, True],
+    ["wh2_main_wef_bowmen_of_oreon", False, True],
+    ["wh3_main_wef_laurelorn", False, True],
+    ["wh3_dlc21_wef_spirits_of_shanlin", False, True],
+    ["wh_dlc05_wef_torgovann", False, True],
+    ["wh_dlc05_wef_wydrioth", False, True]
 ]
 
 # settlement table with columns settlement_key, x_coord, y_coord
@@ -1079,6 +1092,12 @@ class Settlement_Manager():
             return sorted_settlements[0]
         else:
             return None
+        
+    def is_woodelve(self, faction):
+        for i in range(len(woodelve_table)):
+            if faction == woodelve_table[i][0]:
+                return True
+        return False
 
     def shuffle_settlements(self, player_faction: str, max_range: int):
         remaining_settlements = len(settlement_table)
@@ -1086,19 +1105,54 @@ class Settlement_Manager():
         remaining_horde_settlement_ids = [i for i in range(len(settlement_table))]
         new_settlement_table = [[settlement[0], 0] for settlement in settlement_table]
         new_horde_table = []
-        i = self.random.randint(0, len(new_settlement_table) - 1)
-        if self.has_home_region(player_faction):
-            new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
+        remaining_forests_ids = [i for i in range(len(forest_location_table))]
+        if (self.is_woodelve(player_faction)):
+            i = self.random.randint(0, len(remaining_forests_ids) - 1)
+            forest_name = forest_location_table[remaining_forests_ids[i]]
+            for number, settlement in enumerate(new_settlement_table):
+                if settlement[0] == forest_name:
+                    new_settlement_table[number][1] = self.faction_to_faction_id(player_faction)
+                    player_settlement = new_settlement_table[number][0]
+                    remaining_forests_ids.pop(i)
+                    remaining_settlements -= 1
+                    remaining_settlements_ids.remove(number)
+                    self.capital_dict[player_faction] = settlement[0]
+                    self.faction_distance_dict[player_faction] = 0
+                    break
         else:
-            new_horde_table.append([new_settlement_table[i][0], self.faction_to_faction_id(player_faction)])
-        player_settlement = new_settlement_table[i][0]
-        self.capital_dict[player_faction] = player_settlement
-        self.faction_distance_dict[player_faction] = 0
-        if self.has_home_region(player_faction):
-            remaining_settlements_ids.pop(i)
-            remaining_settlements -= 1
-        else:
-            remaining_horde_settlement_ids.pop(i)
+            i = self.random.randint(0, len(new_settlement_table) - 1)
+            if self.has_home_region(player_faction):
+                new_settlement_table[i][1] = self.faction_to_faction_id(player_faction)
+            else:
+                new_horde_table.append([new_settlement_table[i][0], self.faction_to_faction_id(player_faction)])
+            player_settlement = new_settlement_table[i][0]
+            self.capital_dict[player_faction] = player_settlement
+            self.faction_distance_dict[player_faction] = 0
+            if self.has_home_region(player_faction):
+                remaining_settlements_ids.pop(i)
+                remaining_settlements -= 1
+            else:
+                remaining_horde_settlement_ids.pop(i)
+        
+        # Force Woodelves to be in forest_regions
+        for i in range(len(woodelve_table)):
+            woodelve_faction = woodelve_table[i][0]
+            if woodelve_faction == player_faction :
+                continue
+            j = self.random.randint(0, len(remaining_forests_ids) - 1)
+            forest_name = forest_location_table[remaining_forests_ids[j]]
+            for number, settlement in enumerate(new_settlement_table):
+                if settlement[0] == forest_name:
+                    new_settlement_table[number][1] = self.faction_to_faction_id(woodelve_faction)
+                    remaining_forests_ids.pop(j)
+                    remaining_settlements -= 1
+                    remaining_settlements_ids.remove(number)
+                    self.capital_dict[woodelve_faction] = settlement[0]
+                    self.faction_distance_dict[woodelve_faction] = (
+                        self.calculateDistance(self.settlement_to_id(player_settlement), self.settlement_to_id(forest_name))
+                    )
+                    break
+
         first_loop = True
         major_factions_keys = self.get_major_faction_ids()
         minor_factions_keys = self.get_minor_faction_ids()
@@ -1106,6 +1160,12 @@ class Settlement_Manager():
         if self.has_home_region(player_faction):
             major_factions_keys.remove(self.faction_to_faction_id(player_faction))
         self.random.shuffle(minor_factions_keys)
+        # Remove Woodelves from first iteration
+        for i in range(0, 4):
+            if not woodelve_table[i][0] == player_faction :
+                major_factions_keys.remove(self.faction_to_faction_id(woodelve_table[i][0]))
+        for i in range(4, 9):
+            minor_factions_keys.remove(self.faction_to_faction_id(woodelve_table[i][0]))
         for i in range(len(major_factions_keys)):
                 if (remaining_settlements > 0):
                     a = self.random.randint(0, len(remaining_settlements_ids) - 1)
@@ -1136,6 +1196,14 @@ class Settlement_Manager():
                 break
         if self.has_home_region(player_faction):
             major_factions_keys.append(self.faction_to_faction_id(player_faction))
+                
+        # Add Woodelves from first iteration
+        for i in range(0, 4):
+            if not woodelve_table[i][0] == player_faction :
+                major_factions_keys.append(self.faction_to_faction_id(woodelve_table[i][0]))
+        for i in range(4, 9):
+            minor_factions_keys.append(self.faction_to_faction_id(woodelve_table[i][0]))
+
         breakout_counter = 0
         while (remaining_settlements > 0):
             # Randomize faction order
