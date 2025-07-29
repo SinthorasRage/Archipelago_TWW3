@@ -273,7 +273,11 @@ class TWW3Context(CommonContext):
         return
 
     async def check(self, location):
-        await self.check_locations([self.locationLookup[location]])
+        try:
+            await self.check_locations([self.locationLookup[location]])
+        except:
+            logger.error("There is a Key Mismatch. Client will not work anymore. Please report it to the discord server. Key is: " + location)
+            raise ValueError("There is a Key Mismatch. Client will not work anymore. Please report it to the discord server. Key is: " + location)
 
     # async def get_path(self):
     #     if not self.path:
