@@ -302,9 +302,18 @@ class TWW3World(World):
         slot_data: Dict = {}
         
         slot_data["PlayerFaction"] = self.options.starting_faction.value
-        slot_data["ProgressiveTechs"] = self.options.progressive_technologies.value
-        slot_data["ProgressiveBuildings"] = self.options.progressive_buildings.value
-        slot_data["ProgressiveUnits"] = self.options.progressive_units.value
+        if self.options.tech_shuffle.value == True:
+            slot_data["ProgressiveTechs"] = self.options.progressive_technologies.value
+        else:
+            slot_data["ProgressiveTechs"] = False
+        if self.options.building_shuffle.value == True:
+            slot_data["ProgressiveBuildings"] = self.options.progressive_buildings.value
+        else:
+            slot_data["ProgressiveBuildings"] = False
+        if self.options.unit_shuffle.value == True:
+            slot_data["ProgressiveUnits"] = self.options.progressive_units.value
+        else:
+            slot_data["ProgressiveUnits"] = False
         slot_data["StartingTier"] = self.options.starting_tier.value
         slot_data["DominationGoal"] = self.options.domination_option.value
         slot_data["RandomizePersonalities"] = self.options.RandomizePersonalities.value

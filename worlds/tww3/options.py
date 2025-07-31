@@ -117,7 +117,7 @@ class MaxRange(Range):
     range_end = 1500
     default = 200
 
-class TechShuffle(Toggle):
+class TechShuffle(DefaultOnToggle):
     """If Technologies should be shuffled."""
     display_name = "TechShuffle"
 
@@ -125,7 +125,7 @@ class ProgressiveTechnologies(DefaultOnToggle):
     """If Technologies should be progressive. Requires TechShuffle to be on."""
     display_name = "Progressive Technologies"
 
-class BuildingShuffle(Toggle):
+class BuildingShuffle(DefaultOnToggle):
     """If Buildings should be shuffled."""
     display_name = "BuildingShuffle"
 
@@ -133,7 +133,7 @@ class ProgressiveBuildings(DefaultOnToggle):
     """If Buildings should be progressive. Requires BuildingShuffle to be on."""
     display_name = "Progressive Buildings"
 
-class UnitShuffle(Toggle):
+class UnitShuffle(DefaultOnToggle):
     """If Units should be shuffled."""
     display_name = "UnitShuffle"
 
@@ -219,14 +219,14 @@ class filler_strong(Range):
     Experimental Feature."""
     range_start = 0
     range_end = 100
-    default = 0
+    default = 10
 
 class trap_harmless(Range):
     """Weight of harmless traps.
     Experimental Feature."""
     range_start = 0
     range_end = 100
-    default = 0
+    default = 30
 
 class trap_weak(Range):
     """Weight of weak traps.
@@ -234,7 +234,7 @@ class trap_weak(Range):
     Experimental Feature."""
     range_start = 0
     range_end = 100
-    default = 0
+    default = 20
 
 class trap_strong(Range):
     """Weight of weak traps.
@@ -242,7 +242,7 @@ class trap_strong(Range):
     Experimental Feature."""
     range_start = 0
     range_end = 100
-    default = 0
+    default = 10
 
 class RandomizePersonalities(Toggle):
     """Randomize AI Personalities."""

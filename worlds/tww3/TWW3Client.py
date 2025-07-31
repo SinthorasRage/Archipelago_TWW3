@@ -28,7 +28,8 @@ class TWW3CommandProcessor(ClientCommandProcessor):
         if isinstance(self.ctx, TWW3Context):
             sorted_spheres = dict(sorted(self.ctx.spheres.items(), key=lambda item: item[1], reverse=True))
             for faction, reqSphere in sorted_spheres.items():
-                logger.info("Faction: " + faction + " " + str(reqSphere) + " spheres")
+                if reqSphere <= self.ctx.numberOfSphereItems:
+                    logger.info("Faction: " + faction + " " + str(reqSphere) + " spheres")
 
     def _cmd_toggleTraps(self):
         """Turn Traps off and on."""
