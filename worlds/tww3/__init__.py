@@ -88,6 +88,7 @@ class TWW3World(World):
     # print(len(items.item_table.values()))
     # print(len(set(items.item_table.values())))
     location_name_to_id = all_locations
+    location_amount = 0
     sm: Settlement_Manager = None
     factions_to_spheres = {}
     item_list = []
@@ -217,6 +218,7 @@ class TWW3World(World):
 
         # Register region to multiworld
         self.multiworld.regions.append(world_region)
+        self.location_amount = len(world_region.locations)
 
     # refer to rules.py
     
@@ -278,10 +280,9 @@ class TWW3World(World):
             pool.append(tww3_item)
 
         item_amount: int = len(pool)
-        location_amount: int = len(all_locations)
 
         item_manager = Filler_Item_Manager(self.options.filler_weak.value, self.options.filler_strong.value, self.options.trap_harmless.value, self.options.trap_weak.value, self.options.trap_strong.value, self.random)
-        for _ in range(location_amount - item_amount):
+        for _ in range(self.location_amount - 1 - item_amount):
             #item = self.create_filler()
             #item = cast(TWW3Item, item)
             item_name = item_manager.roll_for_item()
