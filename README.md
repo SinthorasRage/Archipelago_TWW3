@@ -14,7 +14,7 @@ The goal of randomized Total War: Warhammer 3 is to find all Orbs of Domination 
 ## Which items can be in another player's world?
 All units, buildings, technologies and faction mechanics can be found in another player's world, if shuffle for those is enabled. Also more diplomacy range and Orbs of Domination are hidden throughout the multiworld as well as lots of creative filler and traps items that can severly change the way your run plays out if enabled.
 
-## What does another world's item look like in Civilization VI?
+## What does another world's item look like in Total War Warhammer 3?
 Each item from another world is represented as a settlement to conquer.
 
 ## When the player receives an item, what happens?
