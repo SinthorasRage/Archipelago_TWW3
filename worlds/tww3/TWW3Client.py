@@ -96,7 +96,6 @@ class TWW3Context(CommonContext):
         self.item_table.update(progressive_units_table)
         self.item_table.update(progressive_techs_table)
         self.item_table.update(ritual_table)
-        self.progressive_items_flags = {key: 0 for key in self.item_table.keys()}
 
     async def server_auth(self, password_requested: bool = False):
         if password_requested and not self.password:
@@ -113,6 +112,7 @@ class TWW3Context(CommonContext):
 
     def on_connected(self, args: dict):
         self.path = TWW3World.settings.tww3_path
+        self.progressive_items_flags = {key: 0 for key in self.item_table.keys()}
         if not self.path or not os.path.exists(self.path):
             logger.error('Path does not point to a directory. Please remove Path from host.yaml. If you need help, ask in the Discord channel.')
         if not os.path.isfile(self.path + '\\Warhammer3.exe'):
