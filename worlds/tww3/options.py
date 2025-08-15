@@ -152,11 +152,17 @@ class StartingTier(Range):
     default = 1
 
 class Spheres(Range):
-    """How many diplomatic Spheres are in the game. You can only engage in Diplomacy with factions that are in your sphere.
+    """How many diplomatic Spheres are required to goal. You can only engage in Diplomacy with factions that are in your sphere.
     Collect Spheres of Influence to expand your Sphere."""
     range_start = 1
     range_end = 65
     default = 7
+
+class ExtraSpheres(Range):
+    """How many extra diplomatic Spheres are in the game in addition to the ones required. Since there is at the moment a small chance to softlock, a few extra spheres should be chosen."""
+    range_start = 1
+    range_end = 50
+    default = 5
 
 class SphereDistance(Range):
     """Distance of each Sphere."""
@@ -205,6 +211,12 @@ class Domination_Amount(Range):
     range_end = 100
     default = 20
 
+class ExtraDominationOrbs(Range):
+    """How many extra Domination Orbs should be in the game in addition to the ones required."""
+    range_start = 1
+    range_end = 50
+    default = 0
+
 class filler_weak(Range):
     """Weight of weak filler items.
     Example: filler_weak: 30, filler_strong: 10, trap_harmless: 30, trap_weak: 25, trap_strong: 5
@@ -248,6 +260,10 @@ class RandomizePersonalities(Toggle):
     """Randomize AI Personalities."""
     display_name = "Randomize Personality of each AI faction"
 
+class NoMovieTraps(Toggle):
+    """Replaces the movie traps to avoid sudden flashing lights. Experimental feature, but should hopefully work. Please report if it doesn't."""
+    display_name = "Replaces the movie traps"
+
 @dataclass
 class TWW3Options(PerGameCommonOptions):
     starting_faction: Faction
@@ -261,6 +277,7 @@ class TWW3Options(PerGameCommonOptions):
     progressive_units: ProgressiveUnits
     starting_tier: StartingTier
     spheres_option: Spheres
+    extra_spheres: ExtraSpheres
     sphere_distance: SphereDistance
     sphere_world: SphereWorld
     balance_spheres: BalanceSpheres
@@ -268,6 +285,7 @@ class TWW3Options(PerGameCommonOptions):
     balance_spheres_max_unlocks: BalanceSpheresMaxUnlocks
     goal: Goal
     domination_option: Domination_Amount
+    extra_domination_orbs: ExtraDominationOrbs
     filler_weak: filler_weak
     filler_strong: filler_strong
     trap_harmless: trap_harmless
@@ -275,3 +293,4 @@ class TWW3Options(PerGameCommonOptions):
     trap_strong: trap_strong
     RandomizePersonalities: RandomizePersonalities
     ritual_shuffle: RitualShuffle
+    no_movie_trap: NoMovieTraps

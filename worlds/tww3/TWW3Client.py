@@ -31,7 +31,7 @@ class TWW3CommandProcessor(ClientCommandProcessor):
                 if reqSphere <= self.ctx.numberOfSphereItems:
                     logger.info("Faction: " + faction + " " + str(reqSphere) + " spheres")
 
-    def _cmd_toggleTraps(self):
+    def _cmd_traps(self):
         """Turn Traps off and on."""
         if isinstance(self.ctx, TWW3Context):
             if self.ctx.are_traps_enabled == True:
@@ -71,6 +71,7 @@ class WaaaghWatcher:
                 await asyncio.sleep(0.5)
                 continue
             logger.info("Sending Location " + line.strip())
+            # self.context.waaaghMessenger.run("cm:get_campaign_ui_manager():unhighlight_settlement(cm:get_region(\"%s\"):settlement():key())" % (line.strip()))
             await self.context.check(line.strip())
 
 class TWW3Context(CommonContext):
@@ -316,17 +317,23 @@ class EngineInitializer():
         capitals = context.capitals
         startingTier = context.startingTier
         waaaghMessenger = context.waaaghMessenger
+        isFirstPlayerSettlement = True
         if (context.randomizePersonalities == True):
             waaaghMessenger.run("cm:cai_force_personality_change(\"All\")")
         for settlement, faction in settlements.items():
             waaaghMessenger.run("cm:transfer_region_to_faction(\"%s\", \"%s\")" % (settlement, faction))
             waaaghMessenger.run("cm:heal_garrison(cm:get_region(\"%s\"):cqi())" % (settlement))
+            # waaaghMessenger.run("cm:get_campaign_ui_manager():highlight_settlement(cm:get_region(\"%s\"):settlement():key())" % (settlement))
+            if ((faction == playerFaction) and (isFirstPlayerSettlement == True)):
+                waaaghMessenger.run("cm:scroll_camera_to_region(\"%s\", \"%s\", 1)" % (faction, settlement))
+                isFirstPlayerSettlement = False
         for faction, settlement in capitals.items():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
         for settlement, faction in hordes.items():
             waaaghMessenger.run("teleport_all_heroes_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
             waaaghMessenger.run("teleport_all_lords_of_faction_to_region(\"%s\", \"%s\")" % (faction, settlement))
+        waaaghMessenger.run("cm:reset_shroud()")
         for itemNumber in randitem_list:
             itemData = context.item_table[itemNumber]
             if ((itemData.type == ItemType.tech) and (context.progressiveTechs == False) and (itemData.progressionGroup != None)):

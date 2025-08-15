@@ -262,8 +262,9 @@ class TWW3World(World):
         if (self.options.progressive_technologies == True):
             for item_id, item in progressive_techs_table.items():
                 if ((item.faction == self.player_faction) and (self.options.tech_shuffle.value == True)):
-                    tww3_item = self.create_item(item.name)
-                    pool.append(tww3_item)
+                    for i in range(item.count):
+                        tww3_item = self.create_item(item.name)
+                        pool.append(tww3_item)
 
         if (self.options.ritual_shuffle == True):
             for item_id, item in ritual_table.items():
@@ -271,11 +272,11 @@ class TWW3World(World):
                     tww3_item = self.create_item(item.name)
                     pool.append(tww3_item)
 
-        for _ in range(self.options.domination_option.value):
+        for _ in range(self.options.domination_option.value + self.options.extra_domination_orbs.value):
             tww3_item = self.create_item("Orb of Domination")
             pool.append(tww3_item)
 
-        for _ in range(self.options.spheres_option.value - 1):
+        for _ in range((self.options.spheres_option.value - 1) + self.options.extra_spheres.value):
             tww3_item = self.create_item("Sphere of Influence")
             pool.append(tww3_item)
 
@@ -286,6 +287,17 @@ class TWW3World(World):
             #item = self.create_filler()
             #item = cast(TWW3Item, item)
             item_name = item_manager.roll_for_item()
+            if self.options.no_movie_trap == True:
+                if item_name == "Spoiler Alert!":
+                    isMovieTrap = True
+                else:
+                    isMovieTrap = False
+                while (isMovieTrap == True):
+                    item_name = item_manager.roll_for_item()
+                    if item_name == "Spoiler Alert!":
+                        isMovieTrap = True
+                    else:
+                        isMovieTrap = False
             item = self.create_item(item_name)
             pool.append(item)
 
